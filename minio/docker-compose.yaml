@@ -1,0 +1,23 @@
+services:
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000" # S3 API port
+      - "9001:9001" # MinIO Console port
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data # Mount host directory to container data directory
+      - ./init-minio.sh:/usr/bin/init-minio.sh:ro
+    entrypoint: ["/bin/sh", "/usr/bin/init-minio.sh"]
+    networks:
+      - minio-network
+      - shared-network
+
+networks:
+  minio-network:
+    driver: bridge
+    name: minio-network
+  shared-network:
+    external: true
