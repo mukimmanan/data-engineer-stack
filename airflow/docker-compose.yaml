@@ -37,6 +37,7 @@ services:
     restart: always
     networks:
       - airflow
+      - shared-network
 
   airflow-apiserver:
     <<: *airflow-common
@@ -57,6 +58,7 @@ services:
         condition: service_completed_successfully
     networks:
       - airflow
+      - shared-network
 
   airflow-scheduler:
     <<: *airflow-common
@@ -75,6 +77,7 @@ services:
         condition: service_completed_successfully
     networks:
       - airflow
+      - shared-network
 
   airflow-dag-processor:
     <<: *airflow-common
@@ -93,6 +96,7 @@ services:
         condition: service_completed_successfully
     networks:
       - airflow
+      - shared-network
 
   airflow-worker:
     <<: *airflow-common
@@ -233,6 +237,7 @@ services:
     user: "0:0"
     networks:
       - airflow
+      - shared-network
 
   docker-proxy:
     image: alpine/socat
