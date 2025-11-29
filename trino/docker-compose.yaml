@@ -1,0 +1,79 @@
+services:
+  hive-metastore:
+    image: custom-hive:4.1.0
+    container_name: hive-metastore
+    environment:
+      - SERVICE_NAME=metastore
+    ports:
+      - "9083:9083"
+    networks:
+      - trino-network
+      - shared-network
+    depends_on:
+      hive-init:
+        condition: service_completed_successfully
+  hive-init:
+    image: custom-hive:4.1.0
+    container_name: hive-init
+    networks:
+      - trino-network
+      - shared-network
+
+  # trino:
+  #   image: trinodb/trino:latest
+  #   container_name: trino
+  #   ports:
+  #     - "8090:8080"
+  #   volumes:
+  #     - ./conf/coordinator/catalog/:/etc/trino/catalog/
+  #   depends_on:
+  #     - hive-metastore
+  #   networks:
+  #     - shared-network
+  #     - trino-network
+      
+  trino-coordinator:
+    image: trinodb/trino:latest
+    hostname: trino-coordinator
+    container_name: trino-coordinator
+    volumes:
+      # Mount configuration files specific to the Coordinator
+      - ./conf/coordinator/config.properties:/etc/trino/config.properties:ro
+      - ./conf/coordinator/node.properties:/etc/trino/node.properties:ro
+      - ./conf/coordinator/catalog/:/etc/trino/catalog/
+      - ./conf/coordinator/data/:/var/lib/trino/data/
+    ports:
+      - "8093:8080" # Exposed port for clients and Web UI
+    networks:
+      - trino-network
+      - shared-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://trino-coordinator:8080/v1/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  # --- 2. Trino Worker Node ---
+  trino-worker-1:
+    image: trinodb/trino:latest
+    hostname: trino-worker-1
+    container_name: trino-worker-1
+    volumes:
+      # Mount configuration files specific to the Worker
+      - ./conf/worker/config.properties:/etc/trino/config.properties:ro
+      - ./conf/worker/node.properties:/etc/trino/node.properties:ro
+      - ./conf/worker/data/:/var/lib/trino/data/
+    networks:
+      - trino-network
+      - shared-network
+    depends_on:
+      trino-coordinator:
+        condition: service_started
+
+networks:
+  shared-network:
+    external: true
+  trino-network:
+    driver: bridge
+    name: trino-network

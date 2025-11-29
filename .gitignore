@@ -9,3 +9,4 @@ tmp/*
 .idea/
 .ipynb_checkpoints/
 *.pyc
+trino/conf/*/data/

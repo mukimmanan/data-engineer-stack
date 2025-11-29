@@ -1,0 +1,70 @@
+<configuration>
+
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:postgresql://postgres:5432/hive?createDatabaseIfNotExist=true</value>
+        <description>JDBC connect string for a JDBC compliant database</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+        <description>Driver class name for a JDBC compliant database</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+        <description>Username to use against metastore database</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>hive</value>
+        <description>Password to use against metastore database</description>
+    </property>
+    
+    <property>
+        <name>fs.s3a.endpoint</name>
+        <value>http://minio:9000</value>
+        <description>MinIO/S3 endpoint URL.</description>
+    </property>
+
+    <property>
+        <name>fs.s3a.access.key</name>
+        <value>root_user</value>
+        <description>Access key for S3 compatible storage</description>
+    </property>
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <value>root_password</value>
+        <description>Secret key for S3 compatible storage</description>
+    </property>
+    
+    <property>
+        <name>fs.s3a.path.style.access</name>
+        <value>true</value>
+        <description>Enable path style access for MinIO.</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>s3a://staging/databases/</value>
+        <description>Location of default database for the warehouse</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.thrift.port</name>
+        <value>9083</value>
+        <description>Hive metastore thrift port</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive-metastore:9083</value>
+        <description>IP address (or fully-qualified domain name) and port of the metastore host</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.client.socket.timeout</name>
+        <value>60000</value>  
+    </property>
+    
+</configuration>
