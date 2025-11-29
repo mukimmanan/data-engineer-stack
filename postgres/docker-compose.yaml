@@ -6,12 +6,8 @@ services:
     container_name: postgres
     env_file:
       - ../.env
-    environment:
-      POSTGRES_USER: primary_user
-      POSTGRES_PASSWORD: primary_password
-      POSTGRES_DB: primary_db
     volumes:
-      - ./init-multiple-dbs.sql:/docker-entrypoint-initdb.d/init-multiple-dbs.sql
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
       - postgres_data:/var/lib/postgresql/data 
       
     ports:
