@@ -1,5 +1,5 @@
 # Use the official Apache Hive 4.1.0 image as the base
-FROM apache/hive:4.1.0
+FROM apache/hive:4.0.1
 
 # Define environment variables for the Metastore DB and MinIO configuration
 # NOTE: The Metastore requires an external database (like Postgres/MySQL) to store metadata.
@@ -19,13 +19,18 @@ ENV METASTORE_PORT=9083
 
 USER root
 
+RUN apt-get update && apt-get install -y curl \
+  && apt-get install -y --no-install-recommends \
+         vim \
+  && apt-get autoremove -yqq --purge \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
 # Move S3A Jars into the main Hadoop common lib directory
 RUN set -ex \
     && ln -s /opt/hadoop/share/hadoop/tools/lib/hadoop-aws* /opt/hadoop/share/hadoop/common/lib/ \
     && ln -s /opt/hadoop/share/hadoop/tools/lib/aws-java-sdk* /opt/hadoop/share/hadoop/common/lib/
 
-# Create a custom configuration directory
-RUN mkdir -p /opt/hive/conf/custom
 
 ENV PG_DRIVER_VERSION=42.7.3
 ENV PG_DRIVER_URL=https://jdbc.postgresql.org/download/postgresql-${PG_DRIVER_VERSION}.jar
@@ -47,7 +52,7 @@ ENV AWS_BUNDLE_JAR_URL=https://repo1.maven.org/maven2/software/amazon/awssdk/bun
 RUN curl -o /opt/hive/lib/aws-sdk-bundle-${AWS_SDK_VERSION}.jar ${AWS_BUNDLE_JAR_URL} \
     && echo "AWS SDK Bundle installed to /opt/hive/lib/"
 
-ENV SCALA_VERSION="2.12"
+ENV SCALA_VERSION="2.13"
 ENV DELTA_STANDALONE_VERSION="0.6.0"
 ENV PARQUET_HADOOP_VERSION="1.12.3"
 ENV MAVEN_URL="https://repo1.maven.org/maven2"

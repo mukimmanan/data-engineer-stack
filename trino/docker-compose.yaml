@@ -1,6 +1,6 @@
 services:
   hive-metastore:
-    image: custom-hive:4.1.0
+    image: custom-hive:4.0.1
     container_name: hive-metastore
     environment:
       - SERVICE_NAME=metastore
@@ -13,7 +13,7 @@ services:
       hive-init:
         condition: service_completed_successfully
   hive-init:
-    image: custom-hive:4.1.0
+    image: custom-hive:4.0.1
     container_name: hive-init
     networks:
       - trino-network

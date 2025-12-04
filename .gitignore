@@ -10,3 +10,4 @@ tmp/*
 .ipynb_checkpoints/
 *.pyc
 trino/conf/*/data/
+jupyter-notebooks/*
