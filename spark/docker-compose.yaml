@@ -18,7 +18,7 @@ services:
       - spark-network
       - shared-network
     volumes:
-      - ./data:/data
+      - ./logs/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
       - ./notebooks:/notebooks
       - ../trino/hive-metastore/hive-site.xml:/opt/spark/conf/hive-site.xml:ro
 
@@ -43,7 +43,7 @@ services:
       - spark-network
       - shared-network
     volumes:
-      - ./data:/data
+      - ./logs/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
       - ./notebooks:/notebooks
       - ../trino/hive-metastore/hive-site.xml:/opt/spark/conf/hive-site.xml:ro
 
@@ -68,7 +68,7 @@ services:
       - spark-network
       - shared-network
     volumes:
-      - ./data:/data
+      - ./logs/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
       - ./notebooks:/notebooks
       - ../trino/hive-metastore/hive-site.xml:/opt/spark/conf/hive-site.xml:ro
       
