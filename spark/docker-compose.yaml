@@ -83,23 +83,23 @@ services:
     networks:
       - spark-network
       - shared-network
-  zepellin:
-    image: custom-spark:4.0.1
-    container_name: zeppelin_server
-    ports:
-      - "8085:8080"  # Zeppelin Web UI
-    networks:
-      - spark-network
-      - shared-network
-    environment:
-      - SPARK_ROLE=zeppelin
-      - USE_HADOOP=false
-      - ZEPPELIN_ADDR=0.0.0.0
-    volumes:
-      - ./logs/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
-      - ./zep_notebooks:/opt/zeppelin/notebook
-      - ../trino/hive-metastore/hive-site.xml:/opt/spark/conf/hive-site.xml:ro
-    command: ["zeppelin", "/opt/zeppelin/bin/zeppelin.sh"]
+  # zepellin:
+  #   image: custom-spark:4.0.1
+  #   container_name: zeppelin_server
+  #   ports:
+  #     - "8085:8080"  # Zeppelin Web UI
+  #   networks:
+  #     - spark-network
+  #     - shared-network
+  #   environment:
+  #     - SPARK_ROLE=zeppelin
+  #     - USE_HADOOP=false
+  #     - ZEPPELIN_ADDR=0.0.0.0
+  #   volumes:
+  #     - ./logs/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
+  #     - ./zep_notebooks:/opt/zeppelin/notebook
+  #     - ../trino/hive-metastore/hive-site.xml:/opt/spark/conf/hive-site.xml:ro
+  #   command: ["zeppelin", "/opt/zeppelin/bin/zeppelin.sh"]
 
 
 networks:

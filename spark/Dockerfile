@@ -72,6 +72,11 @@ RUN chown -R 185:0 ${ZEPPELIN_HOME} && \
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+ENV PG_DRIVER_VERSION=42.7.3
+ENV PG_DRIVER_URL=https://jdbc.postgresql.org/download/postgresql-${PG_DRIVER_VERSION}.jar
+
+RUN curl -o /opt/spark/jars/postgresql-${PG_DRIVER_VERSION}.jar ${PG_DRIVER_URL}
+
 EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]

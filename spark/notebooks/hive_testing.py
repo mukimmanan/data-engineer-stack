@@ -1,26 +1,26 @@
 from pyspark.sql import SparkSession
 
+# Define the full extensions string, ensuring only the Iceberg extension is active,
+# since the default 'spark_catalog' is being configured as an Iceberg catalog.
+EXTENSIONS = "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+
 spark = SparkSession.builder \
     .master("spark://spark-master:7077") \
-    .appName("HiveTesting") \
-    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-    .enableHiveSupport() \
+    .appName("IcebergTesting") \
     .getOrCreate()
 
+# Create a sample DataFrame to write
+data = spark.createDataFrame(
+    [
+        ("TSLA", 900.0, "2023-01-01"),
+        ("GOOG", 150.0, "2023-01-02")
+    ],
+    ["ticker", "price", "date"]
+)
 
-# spark.sql("DROP TABLE IF EXISTS stocks.testing_hive_table3")
+spark.sql("CREATE DATABASE IF NOT EXISTS postgres_catalog.stocks")
 
-spark.sql("SHOW DATABASES").show()
-spark.sql("USE stocks")
+# Now write to the Iceberg table using the default catalog.
+data.writeTo("postgres_catalog.stocks.ice").createOrReplace()
 
-data = spark.sql("SHOW DATABASES")
-
-
-# data.write.mode("overwrite").saveAsTable("stocks.testing_parquet")
-# data.write.mode("overwrite").format("csv").option("header", "true").saveAsTable("stocks.testing_csv")
-data.write.mode("overwrite").option("truncate", "true").format("delta").saveAsTable("stocks.delta")
-
-# spark.sql("SELECT * FROM stocks.testing_parquet").show()
-# spark.sql("SELECT * FROM stocks.testing_csv").show()
-spark.sql("SELECT * FROM stocks.delta").show()
+spark.sql("SELECT * FROM postgres_catalog.stocks.ice").show()
