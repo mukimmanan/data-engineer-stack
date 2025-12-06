@@ -31,7 +31,47 @@ COPY ./hive_jars_401.sh /hive_jars.sh
 RUN chmod +x /hive_jars.sh && /hive_jars.sh
 
 # Entrypoint script to select role
+ARG ZEPPELIN_VERSION=0.12.0
+ENV ZEPPELIN_HOME=/opt/zeppelin
+ENV ZEPPELIN_PACKAGE=zeppelin-${ZEPPELIN_VERSION}-bin-all
+ENV ZEPPELIN_DOWNLOAD_URL=https://dlcdn.apache.org/zeppelin/zeppelin-${ZEPPELIN_VERSION}/${ZEPPELIN_PACKAGE}.tgz
+
+RUN apt-get update && \
+    apt-get install -y wget net-tools && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Zeppelin
+RUN curl -f -L -o /tmp/zeppelin.tgz ${ZEPPELIN_DOWNLOAD_URL} && \
+    mkdir -p ${ZEPPELIN_HOME} && \
+    tar -xf /tmp/zeppelin.tgz -C /opt/ && \
+    mv /opt/${ZEPPELIN_PACKAGE} ${ZEPPELIN_HOME} && \
+    rm /tmp/zeppelin.tgz
+
+RUN mv ${ZEPPELIN_HOME}/${ZEPPELIN_PACKAGE}/* ${ZEPPELIN_HOME}/ && \
+    rm -rf ${ZEPPELIN_HOME}/${ZEPPELIN_PACKAGE}
+# Set Spark as the default interpreter  
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV PATH=$PATH:$SPARK_HOME/bin:$ZEPPELIN_HOME/bin
+ENV JAVA_HOME=/opt/java/openjdk
+
+RUN mkdir -p ${ZEPPELIN_HOME}/logs ${ZEPPELIN_HOME}/run ${ZEPPELIN_HOME}/notebook
+
+RUN apt-get update && \
+    apt-get install -y procps && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV ZEPPELIN_JMX_ENABLE=false
+ENV ZEPPELIN_JAVA_OPTS="--add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+
+# --- Permissions ---
+# Give ownership to the 'spark' user (UID 185)
+RUN chown -R 185:0 ${ZEPPELIN_HOME} && \
+    chmod -R g+w ${ZEPPELIN_HOME}
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]

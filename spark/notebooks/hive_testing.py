@@ -14,7 +14,7 @@ spark = SparkSession.builder \
 spark.sql("SHOW DATABASES").show()
 spark.sql("USE stocks")
 
-data = spark.sql("SHOW DATAASES")
+data = spark.sql("SHOW DATABASES")
 
 
 # data.write.mode("overwrite").saveAsTable("stocks.testing_parquet")
