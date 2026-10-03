@@ -11,3 +11,23 @@ tmp/*
 *.pyc
 trino/conf/*/data/
 /spark/zepplin/*
+
+# Secrets — never commit credentials
+*.env
+.env
+**/.env
+
+# Airflow — large generated config (should be templated)
+airflow/config/airflow.cfg
+
+# Nested git repos
+spark/zep_notebooks/.git/
+
+# OS / Editor
+Thumbs.db
+*.swp
+*.swo
+
+# Docker
+*.tar
+docker-compose.override.yaml

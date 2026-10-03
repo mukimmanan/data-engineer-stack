@@ -29,12 +29,12 @@
 
     <property>
         <name>fs.s3a.access.key</name>
-        <value>root_user</value>
+        <value>${env.MINIO_ROOT_USER}</value>
         <description>Access key for S3 compatible storage</description>
     </property>
     <property>
         <name>fs.s3a.secret.key</name>
-        <value>root_password</value>
+        <value>${env.MINIO_ROOT_PASSWORD}</value>
         <description>Secret key for S3 compatible storage</description>
     </property>
     

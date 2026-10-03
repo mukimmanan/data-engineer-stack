@@ -1,0 +1,178 @@
+{
+  "paragraphs": [
+    {
+      "text": "%delta.sql\r\n\r\nselect namespace, count(1) from stocks.delta GROUP BY namespace;\r\n\r\n",
+      "user": "anonymous",
+      "dateUpdated": "2025-12-05 22:27:12.555",
+      "progress": 0,
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nError happens in sql: \r\n\r\nselect namespace, count(1) from stocks.delta GROUP BY namespace\norg.apache.spark.SparkException: Job 0 cancelled because SparkContext was shut down\n\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1(DAGScheduler.scala:1301)\n\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1$adapted(DAGScheduler.scala:1299)\n\tat scala.collection.mutable.HashSet$Node.foreach(HashSet.scala:450)\n\tat scala.collection.mutable.HashSet.foreach(HashSet.scala:376)\n\tat org.apache.spark.scheduler.DAGScheduler.cleanUpAfterSchedulerStop(DAGScheduler.scala:1299)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onStop(DAGScheduler.scala:3234)\n\tat org.apache.spark.util.EventLoop.stop(EventLoop.scala:85)\n\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$stop$3(DAGScheduler.scala:3120)\n\tat org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1300)\n\tat org.apache.spark.scheduler.DAGScheduler.stop(DAGScheduler.scala:3120)\n\tat org.apache.spark.SparkContext.$anonfun$stop$12(SparkContext.scala:2346)\n\tat org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1300)\n\tat org.apache.spark.SparkContext.stop(SparkContext.scala:2346)\n\tat org.apache.spark.SparkContext.stop(SparkContext.scala:2297)\n\tat org.apache.zeppelin.spark.AbstractSparkScalaInterpreter.close(AbstractSparkScalaInterpreter.java:142)\n\tat org.apache.zeppelin.spark.SparkScala213Interpreter.close(SparkScala213Interpreter.scala:167)\n\tat org.apache.zeppelin.spark.SparkInterpreter.close(SparkInterpreter.java:193)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.close(LazyOpenInterpreter.java:93)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$ShutdownThread.run(RemoteInterpreterServer.java:645)\n\tat org.apache.spark.util.Utils$.getTryWithCallerStacktrace(Utils.scala:1439)\n\tat org.apache.spark.util.LazyTry.get(LazyTry.scala:58)\n\tat org.apache.spark.sql.execution.QueryExecution.executedPlan(QueryExecution.scala:248)\n\tat org.apache.spark.sql.execution.QueryExecution.simpleString(QueryExecution.scala:297)\n\tat org.apache.spark.sql.execution.QueryExecution.org$apache$spark$sql$execution$QueryExecution$$explainString(QueryExecution.scala:344)\n\tat org.apache.spark.sql.execution.QueryExecution.explainString(QueryExecution.scala:312)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$8(SQLExecution.scala:149)\n\tat org.apache.spark.sql.execution.SQLExecution$.withSessionTagsApplied(SQLExecution.scala:272)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$7(SQLExecution.scala:125)\n\tat org.apache.spark.JobArtifactSet$.withActiveJobArtifactState(JobArtifactSet.scala:94)\n\tat org.apache.spark.sql.artifact.ArtifactManager.$anonfun$withResources$1(ArtifactManager.scala:112)\n\tat org.apache.spark.sql.artifact.ArtifactManager.withClassLoaderIfNeeded(ArtifactManager.scala:106)\n\tat org.apache.spark.sql.artifact.ArtifactManager.withResources(ArtifactManager.scala:111)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$6(SQLExecution.scala:125)\n\tat org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:295)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$1(SQLExecution.scala:124)\n\tat org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:804)\n\tat org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId0(SQLExecution.scala:78)\n\tat org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:237)\n\tat org.apache.spark.sql.classic.Dataset.withAction(Dataset.scala:2232)\n\tat org.apache.spark.sql.classic.Dataset.head(Dataset.scala:1379)\n\tat org.apache.spark.sql.Dataset.take(Dataset.scala:2810)\n\tat org.apache.spark.sql.Dataset.takeAsList(Dataset.scala:2832)\n\tat org.apache.zeppelin.spark.SparkUtils.showDataFrame(SparkUtils.java:98)\n\tat org.apache.zeppelin.spark.SparkZeppelinContext.showData(SparkZeppelinContext.scala:68)\n\tat org.apache.zeppelin.spark.SparkSqlInterpreter.internalInterpret(SparkSqlInterpreter.java:103)\n\tat org.apache.zeppelin.interpreter.AbstractInterpreter.interpret(AbstractInterpreter.java:55)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:109)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:824)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:716)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:187)\n\tat org.apache.zeppelin.scheduler.AbstractScheduler.runJob(AbstractScheduler.java:136)\n\tat org.apache.zeppelin.scheduler.ParallelScheduler.lambda$runJobInScheduler$0(ParallelScheduler.java:42)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n\tSuppressed: org.apache.spark.util.Utils$OriginalTryStackTraceException: Full stacktrace of original doTryWithCallerStacktrace caller\n\t\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1(DAGScheduler.scala:1301)\n\t\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1$adapted(DAGScheduler.scala:1299)\n\t\tat scala.collection.mutable.HashSet$Node.foreach(HashSet.scala:450)\n\t\tat scala.collection.mutable.HashSet.foreach(HashSet.scala:376)\n\t\tat org.apache.spark.scheduler.DAGScheduler.cleanUpAfterSchedulerStop(DAGScheduler.scala:1299)\n\t\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onStop(DAGScheduler.scala:3234)\n\t\tat org.apache.spark.util.EventLoop.stop(EventLoop.scala:85)\n\t\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$stop$3(DAGScheduler.scala:3120)\n\t\tat org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1300)\n\t\tat org.apache.spark.scheduler.DAGScheduler.stop(DAGScheduler.scala:3120)\n\t\tat org.apache.spark.SparkContext.$anonfun$stop$12(SparkContext.scala:2346)\n\t\tat org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1300)\n\t\tat org.apache.spark.SparkContext.stop(SparkContext.scala:2346)\n\t\tat org.apache.spark.SparkContext.stop(SparkContext.scala:2297)\n\t\tat org.apache.zeppelin.spark.AbstractSparkScalaInterpreter.close(AbstractSparkScalaInterpreter.java:142)\n\t\tat org.apache.zeppelin.spark.SparkScala213Interpreter.close(SparkScala213Interpreter.scala:167)\n\t\tat org.apache.zeppelin.spark.SparkInterpreter.close(SparkInterpreter.java:193)\n\t\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.close(LazyOpenInterpreter.java:93)\n\t\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$ShutdownThread.run(RemoteInterpreterServer.java:645)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://spark-worker-1:4040/jobs/job?id\u003d0"
+            }
+          ],
+          "interpreterSettingId": "delta"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1764971402305_494861804",
+      "id": "paragraph_1764971402305_494861804",
+      "dateCreated": "2025-12-05 21:50:02.311",
+      "dateStarted": "2025-12-05 22:27:12.600",
+      "dateFinished": "2025-12-05 22:29:00.041",
+      "status": "ERROR"
+    },
+    {
+      "text": "%spark.sql\n\nselect 1;",
+      "user": "anonymous",
+      "dateUpdated": "2025-12-05 22:29:53.911",
+      "progress": 0,
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nError happens in sql: \n\nselect 1\norg.apache.spark.SparkException: [SPARK_JOB_CANCELLED] Job 1 cancelled part of cancelled job group zeppelin|anonymous|2MDWAM2AE|paragraph_1764971430181_916038209 SQLSTATE: XXKDA\n\tat org.apache.spark.errors.SparkCoreErrors$.sparkJobCancelled(SparkCoreErrors.scala:222)\n\tat org.apache.spark.scheduler.DAGScheduler.handleJobCancellation(DAGScheduler.scala:2865)\n\tat org.apache.spark.scheduler.DAGScheduler.$anonfun$handleJobGroupCancelled$7(DAGScheduler.scala:1241)\n\tat scala.runtime.java8.JFunction1$mcVI$sp.apply(JFunction1$mcVI$sp.scala:18)\n\tat scala.collection.mutable.HashSet$Node.foreach(HashSet.scala:450)\n\tat scala.collection.mutable.HashSet.foreach(HashSet.scala:376)\n\tat org.apache.spark.scheduler.DAGScheduler.handleJobGroupCancelled(DAGScheduler.scala:1241)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:3163)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:3141)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:3130)\n\tat org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:50)\n\tat org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:1009)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:2484)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:2505)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:2524)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:2549)\n\tat org.apache.spark.rdd.RDD.$anonfun$collect$1(RDD.scala:1057)\n\tat org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)\n\tat org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)\n\tat org.apache.spark.rdd.RDD.withScope(RDD.scala:417)\n\tat org.apache.spark.rdd.RDD.collect(RDD.scala:1056)\n\tat org.apache.spark.sql.execution.SparkPlan.executeCollect(SparkPlan.scala:462)\n\tat org.apache.spark.sql.classic.Dataset.collectFromPlan(Dataset.scala:2244)\n\tat org.apache.spark.sql.classic.Dataset.$anonfun$head$1(Dataset.scala:1379)\n\tat org.apache.spark.sql.classic.Dataset.$anonfun$withAction$2(Dataset.scala:2234)\n\tat org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:654)\n\tat org.apache.spark.sql.classic.Dataset.$anonfun$withAction$1(Dataset.scala:2232)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$8(SQLExecution.scala:163)\n\tat org.apache.spark.sql.execution.SQLExecution$.withSessionTagsApplied(SQLExecution.scala:272)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$7(SQLExecution.scala:125)\n\tat org.apache.spark.JobArtifactSet$.withActiveJobArtifactState(JobArtifactSet.scala:94)\n\tat org.apache.spark.sql.artifact.ArtifactManager.$anonfun$withResources$1(ArtifactManager.scala:112)\n\tat org.apache.spark.sql.artifact.ArtifactManager.withClassLoaderIfNeeded(ArtifactManager.scala:106)\n\tat org.apache.spark.sql.artifact.ArtifactManager.withResources(ArtifactManager.scala:111)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$6(SQLExecution.scala:125)\n\tat org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:295)\n\tat org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId0$1(SQLExecution.scala:124)\n\tat org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:804)\n\tat org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId0(SQLExecution.scala:78)\n\tat org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:237)\n\tat org.apache.spark.sql.classic.Dataset.withAction(Dataset.scala:2232)\n\tat org.apache.spark.sql.classic.Dataset.head(Dataset.scala:1379)\n\tat org.apache.spark.sql.Dataset.take(Dataset.scala:2810)\n\tat org.apache.spark.sql.Dataset.takeAsList(Dataset.scala:2832)\n\tat org.apache.zeppelin.spark.SparkUtils.showDataFrame(SparkUtils.java:98)\n\tat org.apache.zeppelin.spark.SparkZeppelinContext.showData(SparkZeppelinContext.scala:68)\n\tat org.apache.zeppelin.spark.SparkSqlInterpreter.internalInterpret(SparkSqlInterpreter.java:103)\n\tat org.apache.zeppelin.interpreter.AbstractInterpreter.interpret(AbstractInterpreter.java:55)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:109)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:824)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:716)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:187)\n\tat org.apache.zeppelin.scheduler.AbstractScheduler.runJob(AbstractScheduler.java:136)\n\tat org.apache.zeppelin.scheduler.ParallelScheduler.lambda$runJobInScheduler$0(ParallelScheduler.java:42)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://spark-master:4040/jobs/job?id\u003d1"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1764971430181_916038209",
+      "id": "paragraph_1764971430181_916038209",
+      "dateCreated": "2025-12-05 21:50:30.182",
+      "dateStarted": "2025-12-05 22:29:53.954",
+      "dateFinished": "2025-12-05 22:30:07.306",
+      "status": "ABORT"
+    },
+    {
+      "text": "%spark.sql\n",
+      "user": "anonymous",
+      "dateUpdated": "2025-12-05 22:15:22.376",
+      "progress": 0,
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1764972116457_1592266303",
+      "id": "paragraph_1764972116457_1592266303",
+      "dateCreated": "2025-12-05 22:01:56.460",
+      "dateStarted": "2025-12-05 22:15:22.412",
+      "dateFinished": "2025-12-05 22:15:22.466",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark.sql\n",
+      "user": "anonymous",
+      "dateUpdated": "2025-12-05 22:15:22.410",
+      "progress": 0,
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1764972922410_2121120545",
+      "id": "paragraph_1764972922410_2121120545",
+      "dateCreated": "2025-12-05 22:15:22.410",
+      "status": "READY"
+    }
+  ],
+  "name": "Testing",
+  "id": "2MDWAM2AE",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.12.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}

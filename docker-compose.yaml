@@ -1,0 +1,15 @@
+name: data-engineer-stack
+
+include:
+  - postgres/docker-compose.yaml
+  - minio/docker-compose.yaml
+  - trino/docker-compose.yaml
+  - spark/docker-compose.yaml
+  - airflow/docker-compose.yaml
+  - monitoring/docker-compose.yaml
+  - kafka/docker-compose.yaml
+
+networks:
+  shared-network:
+    name: shared-network
+    driver: bridge

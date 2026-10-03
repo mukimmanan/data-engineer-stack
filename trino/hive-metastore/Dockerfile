@@ -1,4 +1,4 @@
-# Use the official Apache Hive 4.1.0 image as the base
+# Use the official Apache Hive 4.0.1 image as the base
 FROM apache/hive:4.0.1
 
 # Define environment variables for the Metastore DB and MinIO configuration

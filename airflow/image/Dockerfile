@@ -1,4 +1,4 @@
-FROM apache/airflow:3.1.3
+FROM apache/airflow:3.3.2
 
 # Switch to root to install OS-level build dependencies required by some
 # packages (for example: sasl, thrift-sasl, cryptography, etc.). Then
