@@ -29,5 +29,7 @@ networks:
     driver: bridge
     name: db_network
   shared-network:
+    external: true
     name: shared-network
+
 

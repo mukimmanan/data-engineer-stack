@@ -9,7 +9,5 @@ include:
   - monitoring/docker-compose.yaml
   - kafka/docker-compose.yaml
 
-networks:
-  shared-network:
-    name: shared-network
-    driver: bridge
+
+

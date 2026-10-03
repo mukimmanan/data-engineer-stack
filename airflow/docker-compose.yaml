@@ -288,6 +288,8 @@ networks:
     driver: bridge
     name: airflow
   shared-network:
+    external: true
     name: shared-network
+
 
 

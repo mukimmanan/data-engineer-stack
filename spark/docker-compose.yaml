@@ -153,7 +153,9 @@ networks:
     driver: bridge
     name: spark-network
   shared-network:
+    external: true
     name: shared-network
+
 
 
 

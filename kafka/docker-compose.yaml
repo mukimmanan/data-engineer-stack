@@ -161,7 +161,10 @@ networks:
   kafka-network:
     driver: bridge
   shared-network:
+    external: true
     name: shared-network
+
+
 
 
 

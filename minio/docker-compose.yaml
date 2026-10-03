@@ -27,4 +27,6 @@ networks:
     driver: bridge
     name: minio-network
   shared-network:
+    external: true
     name: shared-network
+

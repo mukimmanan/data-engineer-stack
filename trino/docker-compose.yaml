@@ -98,7 +98,9 @@ services:
 
 networks:
   shared-network:
+    external: true
     name: shared-network
   trino-network:
     driver: bridge
     name: trino-network
+
