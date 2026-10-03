@@ -95,7 +95,7 @@ services:
   # Debezium Connect for PostgreSQL CDC
   # ------------------------------------------------------------
   kafka-connect:
-    image: debezium/connect:3.0
+    image: debezium/connect:3.0.0.Final
     container_name: kafka-connect
     ports:
       - "8083:8083"
@@ -162,5 +162,6 @@ networks:
     driver: bridge
   shared-network:
     name: shared-network
+
 
 
