@@ -11,8 +11,12 @@ GRANT ALL PRIVILEGES ON DATABASE airflow TO airflow;
 GRANT ALL PRIVILEGES ON DATABASE hive TO hive;
 GRANT ALL PRIVILEGES ON DATABASE data_warehouse TO main;
 GRANT ALL PRIVILEGES ON DATABASE iceberg_db TO iceberg;
--- Database for Debezium CDC Demo
-CREATE DATABASE cdc_db;
+
+-- Database and User for Debezium CDC Demo
+CREATE USER cdc_user WITH PASSWORD 'cdc_password' REPLICATION LOGIN;
+CREATE DATABASE cdc_db OWNER cdc_user;
+GRANT ALL PRIVILEGES ON DATABASE cdc_db TO cdc_user;
+
 \c cdc_db
 CREATE TABLE IF NOT EXISTS public.orders (
     id SERIAL PRIMARY KEY,
@@ -20,6 +24,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
     quantity INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE public.orders OWNER TO cdc_user;
+
 -- Configure replication privileges
 ALTER SYSTEM SET max_replication_slots = 4;
 ALTER SYSTEM SET max_wal_senders = 4;
