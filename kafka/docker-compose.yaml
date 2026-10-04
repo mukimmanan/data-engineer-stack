@@ -133,11 +133,7 @@ services:
       - "8088:8080"
     environment:
       # Database connection details (using the centralized Postgres)
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=conduktor
-      - POSTGRES_PASSWORD=conduktor_pass
-      - POSTGRES_DB=conduktor_db
+      - CDK_DATABASE_URL=postgresql://conduktor:conduktor_pass@postgres:5432/conduktor_db
       
       # Kafka cluster registration inside Conduktor
       - CDK_CLUSTER_URL=kafka-0:9092
@@ -163,6 +159,7 @@ networks:
   shared-network:
     external: true
     name: shared-network
+
 
 
 
