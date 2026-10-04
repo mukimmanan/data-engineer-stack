@@ -7,10 +7,7 @@ services:
     container_name: kafka-0
     ports:
       - "9092:9092"
-    volumes:
-      - ./platform-config.yaml:/opt/conduktor/platform-config.yaml:ro
     environment:
-      - CDK_IN_CONF_FILE=/opt/conduktor/platform-config.yaml
       - KAFKA_NODE_ID=0
       - KAFKA_PROCESS_ROLES=controller,broker
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
@@ -34,10 +31,7 @@ services:
     container_name: kafka-1
     ports:
       - "9094:9092"
-    volumes:
-      - ./platform-config.yaml:/opt/conduktor/platform-config.yaml:ro
     environment:
-      - CDK_IN_CONF_FILE=/opt/conduktor/platform-config.yaml
       - KAFKA_NODE_ID=1
       - KAFKA_PROCESS_ROLES=controller,broker
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
@@ -61,10 +55,7 @@ services:
     container_name: kafka-2
     ports:
       - "9096:9092"
-    volumes:
-      - ./platform-config.yaml:/opt/conduktor/platform-config.yaml:ro
     environment:
-      - CDK_IN_CONF_FILE=/opt/conduktor/platform-config.yaml
       - KAFKA_NODE_ID=2
       - KAFKA_PROCESS_ROLES=controller,broker
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
@@ -88,10 +79,7 @@ services:
     container_name: schema-registry
     ports:
       - "8081:8081"
-    volumes:
-      - ./platform-config.yaml:/opt/conduktor/platform-config.yaml:ro
     environment:
-      - CDK_IN_CONF_FILE=/opt/conduktor/platform-config.yaml
       - SCHEMA_REGISTRY_HOST_NAME=schema-registry
       - SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS=kafka-0:9092,kafka-1:9092,kafka-2:9092
     networks:
@@ -111,23 +99,14 @@ services:
     container_name: kafka-connect
     ports:
       - "8083:8083"
-    volumes:
-      - ./platform-config.yaml:/opt/conduktor/platform-config.yaml:ro
     environment:
-      - CDK_IN_CONF_FILE=/opt/conduktor/platform-config.yaml
       - BOOTSTRAP_SERVERS=kafka-0:9092,kafka-1:9092,kafka-2:9092
       - GROUP_ID=1
       - CONFIG_STORAGE_TOPIC=my_connect_configs
       - OFFSET_STORAGE_TOPIC=my_connect_offsets
       - STATUS_STORAGE_TOPIC=my_connect_statuses
-      # Defaulting to JSON with Schemas enabled
       - KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
       - VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
-      # Uncomment to use Avro with the Schema Registry (requires Avro Converter JAR in Debezium)
-      # - KEY_CONVERTER=io.confluent.connect.avro.AvroConverter
-      # - VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter
-      # - CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
-      # - CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
     depends_on:
       - kafka-0
       - kafka-1
@@ -150,9 +129,7 @@ services:
       - ./platform-config.yaml:/opt/conduktor/platform-config.yaml:ro
     environment:
       - CDK_IN_CONF_FILE=/opt/conduktor/platform-config.yaml
-      # Database connection details (using the centralized Postgres)
       - CDK_DATABASE_URL=postgresql://conduktor:conduktor_pass@postgres:5432/conduktor_db
-      
     networks:
       - kafka-network
       - shared-network
@@ -174,11 +151,3 @@ networks:
   shared-network:
     external: true
     name: shared-network
-
-
-
-
-
-
-
-
