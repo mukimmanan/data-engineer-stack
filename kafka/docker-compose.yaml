@@ -135,9 +135,6 @@ services:
       # Database connection details (using the centralized Postgres)
       - CDK_DATABASE_URL=postgresql://conduktor:conduktor_pass@postgres:5432/conduktor_db
       
-      # Kafka cluster registration inside Conduktor
-      - CDK_CLUSTER_URL=kafka-0:9092
-      - CDK_CLUSTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
     networks:
       - kafka-network
       - shared-network
@@ -159,6 +156,7 @@ networks:
   shared-network:
     external: true
     name: shared-network
+
 
 
 
