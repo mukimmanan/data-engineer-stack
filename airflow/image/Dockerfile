@@ -11,15 +11,13 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY image/requirements.txt /tmp/requirements.txt
-COPY config/airflow.cfg /opt/airflow/config/airflow.cfg
+COPY ./requirements.txt /tmp/requirements.txt
+
+# (Note: We do NOT COPY airflow.cfg here because it is mounted at runtime via docker-compose.yaml)
 
 # Upgrade packaging tools first (helps building wheels) then install
 # Python requirements. Keep --no-cache-dir to reduce image size.
 USER airflow
 
 RUN pip install --upgrade pip setuptools wheel \
-	&& pip install --no-cache-dir "apache-airflow==3.1.3" -r /tmp/requirements.txt
-
-
-ENTRYPOINT [ "airflow" ]
+	&& pip install --no-cache-dir -r /tmp/requirements.txt
