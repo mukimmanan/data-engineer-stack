@@ -1,0 +1,10 @@
+# Conduktor Console Provisioning
+clusters:
+  - id: "local-kafka-cluster"
+    name: "Lakehouse Kafka Cluster"
+    bootstrapServers: "kafka-0:9092,kafka-1:9092,kafka-2:9092"
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+    kafkaConnects:
+      - name: "Debezium CDC"
+        url: "http://kafka-connect:8083"
