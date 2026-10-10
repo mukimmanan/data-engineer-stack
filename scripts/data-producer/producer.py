@@ -22,13 +22,16 @@ if protoc.main(protoc_args) != 0:
 # Now we can import the generated Python class
 import transaction_pb2
 from confluent_kafka import Producer
+from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions
 from confluent_kafka.serialization import StringSerializer, SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.protobuf import ProtobufSerializer
 
 TOPIC_NAME = "global_financial_transactions"
-BOOTSTRAP_SERVERS = "localhost:9092,localhost:9094,localhost:9096"
-SCHEMA_REGISTRY_URL = "http://localhost:8081"
+NUM_PARTITIONS = 3
+REPLICATION_FACTOR = 3
+BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS", "localhost:9092,localhost:9094,localhost:9096")
+SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081")
 
 fake = Faker()
 
@@ -63,7 +66,47 @@ def delivery_report(err, msg):
     else:
         print(f"Record successfully produced to {msg.topic()} [Partition: {msg.partition()}] at offset {msg.offset()}")
 
+def ensure_topic_partitions(bootstrap_servers, topic_name, num_partitions=3, replication_factor=3):
+    """Ensures that the topic exists with at least num_partitions partitions."""
+    print(f"Checking partitions for topic '{topic_name}'...")
+    admin_client = AdminClient({'bootstrap.servers': bootstrap_servers})
+    try:
+        metadata = admin_client.list_topics(timeout=10)
+        num_brokers = len(metadata.brokers)
+        effective_rf = min(replication_factor, num_brokers) if num_brokers > 0 else 1
+
+        if topic_name not in metadata.topics:
+            print(f"Topic '{topic_name}' does not exist. Creating with {num_partitions} partitions (RF: {effective_rf})...")
+            new_topic = NewTopic(topic_name, num_partitions=num_partitions, replication_factor=effective_rf)
+            futures = admin_client.create_topics([new_topic])
+            for t, f in futures.items():
+                try:
+                    f.result()
+                    print(f"Topic '{t}' successfully created with {num_partitions} partitions.")
+                except Exception as e:
+                    print(f"Notice during topic creation: {e}")
+        else:
+            topic_metadata = metadata.topics[topic_name]
+            current_partitions = len(topic_metadata.partitions)
+            print(f"Topic '{topic_name}' currently has {current_partitions} partition(s).")
+            if current_partitions < num_partitions:
+                print(f"Altering topic '{topic_name}' to expand to {num_partitions} partitions...")
+                futures = admin_client.create_partitions([NewPartitions(topic_name, num_partitions)])
+                for t, f in futures.items():
+                    try:
+                        f.result()
+                        print(f"Topic '{t}' successfully updated to {num_partitions} partitions.")
+                    except Exception as e:
+                        print(f"Notice during partition expansion: {e}")
+            else:
+                print(f"Topic '{topic_name}' already configured with {current_partitions} partitions.")
+    except Exception as e:
+        print(f"Warning: AdminClient check skipped or failed ({e}). Proceeding to produce...")
+
 def main():
+    print(f"Connecting to Kafka Brokers at {BOOTSTRAP_SERVERS}...")
+    ensure_topic_partitions(BOOTSTRAP_SERVERS, TOPIC_NAME, NUM_PARTITIONS, REPLICATION_FACTOR)
+
     print(f"Setting up Schema Registry Client at {SCHEMA_REGISTRY_URL}...")
     schema_registry_conf = {'url': SCHEMA_REGISTRY_URL}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
@@ -75,13 +118,12 @@ def main():
         conf={'use.deprecated.format': False}
     )
 
-    print(f"Connecting to Kafka Brokers at {BOOTSTRAP_SERVERS}...")
     producer_conf = {'bootstrap.servers': BOOTSTRAP_SERVERS}
     producer = Producer(producer_conf)
     
     string_serializer = StringSerializer('utf_8')
 
-    print(f"Starting stream to topic '{TOPIC_NAME}'... Press Ctrl+C to stop.")
+    print(f"Starting stream to topic '{TOPIC_NAME}' (3 Partitions)... Press Ctrl+C to stop.")
     
     try:
         while True:

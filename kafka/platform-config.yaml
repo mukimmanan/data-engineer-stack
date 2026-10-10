@@ -2,7 +2,7 @@
 clusters:
   - id: "local-kafka-cluster"
     name: "Lakehouse Kafka Cluster"
-    bootstrapServers: "kafka-0:9092,kafka-1:9092,kafka-2:9092"
+    bootstrapServers: "kafka-0:29092,kafka-1:29092,kafka-2:29092"
     schemaRegistry:
       url: "http://schema-registry:8081"
     kafkaConnects:
