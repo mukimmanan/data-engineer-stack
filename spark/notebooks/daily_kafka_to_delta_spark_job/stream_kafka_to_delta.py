@@ -2,15 +2,15 @@ import os
 import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, expr
-from delta.tables import DeltaTable
+from pyspark.sql.functions import col, expr
 
 def get_spark_session():
     """
     Initializes and returns a SparkSession with Delta Lake, Hive Metastore, and MinIO S3A configs.
     Connects to Hive Metastore so tables can be queried like AWS Glue & Athena.
     """
-    minio_user = os.getenv("MINIO_ROOT_USER", "admin")
-    minio_password = os.getenv("MINIO_ROOT_PASSWORD", "password")
+    minio_user = os.getenv("MINIO_ROOT_USER", "root_user")
+    minio_password = os.getenv("MINIO_ROOT_PASSWORD", "root_password")
 
     builder = (SparkSession.builder
         .appName("KafkaToDeltaStreamingUpsert")
@@ -25,6 +25,7 @@ def get_spark_session():
         .config("spark.hadoop.fs.s3a.secret.key", minio_password)
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+        .config("spark.hadoop.fs.s3a.input.stream.type", "classic")
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false"))
 
     return builder.getOrCreate()
@@ -72,15 +73,14 @@ def upsert_to_delta(micro_batch_df, batch_id):
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {db_name}")
 
     if spark.catalog.tableExists(full_table_name):
-        delta_table = DeltaTable.forName(spark, full_table_name)
-        (delta_table.alias("target")
-            .merge(
-                cleaned_df.alias("source"),
-                "target.transaction_id = source.transaction_id"
-            )
-            .whenMatchedUpdateAll()
-            .whenNotMatchedInsertAll()
-            .execute())
+        cleaned_df.createOrReplaceTempView("batch_updates")
+        spark.sql(f"""
+            MERGE INTO {full_table_name} AS target
+            USING batch_updates AS source
+            ON target.transaction_id = source.transaction_id
+            WHEN MATCHED THEN UPDATE SET *
+            WHEN NOT MATCHED THEN INSERT *
+        """)
         print(f"[Batch {batch_id}] Successfully upserted (MERGE) into catalog table '{full_table_name}'.")
     else:
         print(f"[Batch {batch_id}] Table '{full_table_name}' not found in Hive catalog. Initializing and registering...")

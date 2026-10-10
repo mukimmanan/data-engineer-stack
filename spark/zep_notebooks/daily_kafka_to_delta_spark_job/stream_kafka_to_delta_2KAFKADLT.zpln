@@ -1,27 +1,51 @@
 {
   "paragraphs": [
     {
-      "text": "%md\n# Kafka to Delta Lake Streaming Upsert (Hive Metastore & MinIO)\n**DAG Association:** `daily_kafka_to_delta_spark_job`\n\nThis pipeline mirrors an **AWS Glue + Athena** Lakehouse architecture:\n1. **Kafka Stream:** Consumes Protobuf events from `global_financial_transactions`.\n2. **Hive Metastore Registration:** Automatically registers the table in Hive (`lakehouse.financial_transactions`).\n3. **Delta Lake Upsert:** Micro-batch `MERGE INTO` (upsert) by `transaction_id` using `DeltaTable.forName`.\n4. **Trino / Athena Querying:** Queryable from Trino via `SELECT * FROM minio_delta.lakehouse.financial_transactions`.",
+      "text": "%md\n# Kafka to Delta Lake Streaming Upsert (Hive Metastore \u0026 MinIO)\n**DAG Association:** `daily_kafka_to_delta_spark_job`\n\nThis pipeline mirrors an **AWS Glue + Athena** Lakehouse architecture:\n1. **Kafka Stream:** Consumes Protobuf events from `global_financial_transactions`.\n2. **Hive Metastore Registration:** Automatically registers the table in Hive (`lakehouse.financial_transactions`).\n3. **Delta Lake Upsert:** Micro-batch `MERGE INTO` (upsert) by `transaction_id` using `DeltaTable.forName`.\n4. **Trino / Athena Querying:** Queryable from Trino via `SELECT * FROM minio_delta.lakehouse.financial_transactions`.",
       "user": "anonymous",
+      "dateUpdated": "2026-10-10 19:00:59.978",
+      "progress": 0,
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
         "editorSetting": {
           "language": "markdown",
-          "editOnDblClick": true
-        }
+          "editOnDblClick": true,
+          "completionSupport": false
+        },
+        "enabled": true,
+        "results": {},
+        "editorHide": true,
+        "tableHide": false
       },
       "settings": {
         "params": {},
         "forms": {}
       },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "\u003cdiv class\u003d\"markdown-body\"\u003e\n\u003ch1\u003eKafka to Delta Lake Streaming Upsert (Hive Metastore \u0026amp; MinIO)\u003c/h1\u003e\n\u003cp\u003e\u003cstrong\u003eDAG Association:\u003c/strong\u003e \u003ccode\u003edaily_kafka_to_delta_spark_job\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eThis pipeline mirrors an \u003cstrong\u003eAWS Glue + Athena\u003c/strong\u003e Lakehouse architecture:\u003c/p\u003e\n\u003col\u003e\n\u003cli\u003e\u003cstrong\u003eKafka Stream:\u003c/strong\u003e Consumes Protobuf events from \u003ccode\u003eglobal_financial_transactions\u003c/code\u003e.\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eHive Metastore Registration:\u003c/strong\u003e Automatically registers the table in Hive (\u003ccode\u003elakehouse.financial_transactions\u003c/code\u003e).\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eDelta Lake Upsert:\u003c/strong\u003e Micro-batch \u003ccode\u003eMERGE INTO\u003c/code\u003e (upsert) by \u003ccode\u003etransaction_id\u003c/code\u003e using \u003ccode\u003eDeltaTable.forName\u003c/code\u003e.\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eTrino / Athena Querying:\u003c/strong\u003e Queryable from Trino via \u003ccode\u003eSELECT * FROM minio_delta.lakehouse.financial_transactions\u003c/code\u003e.\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003c/div\u003e"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
       "jobName": "paragraph_1791656000000_100000001",
       "id": "paragraph_1791656000000_100000001",
-      "status": "READY"
+      "dateCreated": "2026-10-10 19:00:56.979",
+      "dateStarted": "2026-10-10 19:00:59.980",
+      "dateFinished": "2026-10-10 19:01:03.574",
+      "status": "FINISHED"
     },
     {
-      "text": "%spark.pyspark\nimport os\nfrom pyspark.sql.functions import col, expr\nfrom pyspark.sql.protobuf.functions import from_protobuf\nfrom delta.tables import DeltaTable\n\nprint(\"Spark Version:\", spark.version)\nprint(\"Hive Metastore URI:\", spark.conf.get(\"spark.hadoop.hive.metastore.uris\", \"default\"))\nprint(\"MinIO S3A Endpoint:\", spark.conf.get(\"spark.hadoop.fs.s3a.endpoint\", \"default\"))\n\n# Ensure lakehouse database exists in Hive catalog\nspark.sql(\"CREATE DATABASE IF NOT EXISTS lakehouse\")\nprint(\"Databases in Hive Metastore:\", [db.name for db in spark.catalog.listDatabases()])",
+      "text": "%spark.pyspark\nimport os\nfrom pyspark.sql.functions import col, expr\nfrom pyspark.sql.protobuf.functions import from_protobuf\n\nprint(\"Spark Version:\", spark.version)\nprint(\"Hive Metastore URI:\", spark.conf.get(\"spark.hadoop.hive.metastore.uris\", \"default\"))\nprint(\"MinIO S3A Endpoint:\", spark.conf.get(\"spark.hadoop.fs.s3a.endpoint\", \"default\"))\n\n# Ensure lakehouse database exists in Hive catalog\nspark.sql(\"CREATE DATABASE IF NOT EXISTS lakehouse\")\nprint(\"Databases in Hive Metastore:\", [db.name for db in spark.catalog.listDatabases()])",
       "user": "anonymous",
+      "dateUpdated": "2026-10-10 19:01:09.121",
+      "progress": 0,
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -30,19 +54,37 @@
           "editOnDblClick": false,
           "completionKey": "TAB",
           "completionSupport": true
-        }
+        },
+        "enabled": true,
+        "results": {}
       },
       "settings": {
         "params": {},
         "forms": {}
       },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "org.apache.zeppelin.interpreter.InterpreterException: org.apache.zeppelin.interpreter.InterpreterException: org.apache.zeppelin.interpreter.InterpreterException: Fail to open SparkInterpreter\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.open(LazyOpenInterpreter.java:77)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:808)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:716)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:187)\n\tat org.apache.zeppelin.scheduler.AbstractScheduler.runJob(AbstractScheduler.java:136)\n\tat org.apache.zeppelin.scheduler.FIFOScheduler.lambda$runJobInScheduler$0(FIFOScheduler.java:42)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\nCaused by: org.apache.zeppelin.interpreter.InterpreterException: org.apache.zeppelin.interpreter.InterpreterException: Fail to open SparkInterpreter\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.open(LazyOpenInterpreter.java:77)\n\tat org.apache.zeppelin.interpreter.Interpreter.getInterpreterInTheSameSessionByClassName(Interpreter.java:328)\n\tat org.apache.zeppelin.interpreter.Interpreter.getInterpreterInTheSameSessionByClassName(Interpreter.java:339)\n\tat org.apache.zeppelin.spark.PySparkInterpreter.open(PySparkInterpreter.java:90)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.open(LazyOpenInterpreter.java:71)\n\t... 8 more\nCaused by: org.apache.zeppelin.interpreter.InterpreterException: Fail to open SparkInterpreter\n\tat org.apache.zeppelin.spark.SparkInterpreter.open(SparkInterpreter.java:140)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.open(LazyOpenInterpreter.java:71)\n\t... 12 more\nCaused by: java.io.IOException: Failed to connect to spark-master/172.18.0.18:43169\n\tat org.apache.spark.network.client.TransportClientFactory.createClient(TransportClientFactory.java:304)\n\tat org.apache.spark.network.client.TransportClientFactory.createClient(TransportClientFactory.java:224)\n\tat org.apache.spark.network.client.TransportClientFactory.createClient(TransportClientFactory.java:236)\n\tat org.apache.spark.rpc.netty.NettyRpcEnv.downloadClient(NettyRpcEnv.scala:406)\n\tat org.apache.spark.rpc.netty.NettyRpcEnv.$anonfun$openChannel$4(NettyRpcEnv.scala:370)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinallyAndFailureCallbacks(Utils.scala:1337)\n\tat org.apache.spark.rpc.netty.NettyRpcEnv.openChannel(NettyRpcEnv.scala:369)\n\tat org.apache.spark.util.Utils$.doFetchFile(Utils.scala:653)\n\tat org.apache.spark.util.Utils$.fetchFile(Utils.scala:410)\n\tat org.apache.spark.executor.Executor.$anonfun$updateDependencies$14(Executor.scala:1489)\n\tat org.apache.spark.executor.Executor.$anonfun$updateDependencies$14$adapted(Executor.scala:1480)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:630)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:628)\n\tat scala.collection.AbstractIterable.foreach(Iterable.scala:936)\n\tat scala.collection.IterableOps$WithFilter.foreach(Iterable.scala:906)\n\tat org.apache.spark.executor.Executor.updateDependencies(Executor.scala:1480)\n\tat org.apache.spark.executor.Executor.\u003cinit\u003e(Executor.scala:520)\n\tat org.apache.spark.scheduler.local.LocalEndpoint.\u003cinit\u003e(LocalSchedulerBackend.scala:68)\n\tat org.apache.spark.scheduler.local.LocalSchedulerBackend.start(LocalSchedulerBackend.scala:150)\n\tat org.apache.spark.scheduler.TaskSchedulerImpl.start(TaskSchedulerImpl.scala:229)\n\tat org.apache.spark.SparkContext.\u003cinit\u003e(SparkContext.scala:629)\n\tat org.apache.spark.SparkContext$.getOrCreate(SparkContext.scala:3075)\n\tat org.apache.spark.sql.classic.SparkSession$Builder.$anonfun$build$2(SparkSession.scala:1045)\n\tat scala.Option.getOrElse(Option.scala:201)\n\tat org.apache.spark.sql.classic.SparkSession$Builder.build(SparkSession.scala:1036)\n\tat org.apache.spark.sql.classic.SparkSession$Builder.getOrCreate(SparkSession.scala:1065)\n\tat org.apache.spark.sql.classic.SparkSession$Builder.getOrCreate(SparkSession.scala:938)\n\tat org.apache.spark.sql.SparkSession$Builder.getOrCreate(SparkSession.scala:929)\n\tat org.apache.zeppelin.spark.AbstractSparkScalaInterpreter.createSparkContext(AbstractSparkScalaInterpreter.java:192)\n\tat org.apache.zeppelin.spark.AbstractSparkScalaInterpreter.open(AbstractSparkScalaInterpreter.java:117)\n\tat org.apache.zeppelin.spark.SparkInterpreter.open(SparkInterpreter.java:124)\n\t... 13 more\nCaused by: io.netty.channel.AbstractChannel$AnnotatedConnectException: finishConnect(..) failed with error(-111): Connection refused: spark-master/172.18.0.18:43169\nCaused by: java.net.ConnectException: finishConnect(..) failed with error(-111): Connection refused\n\tat io.netty.channel.unix.Errors.newConnectException0(Errors.java:166)\n\tat io.netty.channel.unix.Errors.handleConnectErrno(Errors.java:131)\n\tat io.netty.channel.unix.Socket.finishConnect(Socket.java:361)\n\tat io.netty.channel.epoll.AbstractEpollChannel$AbstractEpollUnsafe.doFinishConnect(AbstractEpollChannel.java:772)\n\tat io.netty.channel.epoll.AbstractEpollChannel$AbstractEpollUnsafe.finishConnect(AbstractEpollChannel.java:749)\n\tat io.netty.channel.epoll.AbstractEpollChannel$AbstractEpollUnsafe.epollOutReady(AbstractEpollChannel.java:616)\n\tat io.netty.channel.epoll.AbstractEpollChannel$AbstractEpollUnsafe.handle(AbstractEpollChannel.java:477)\n\tat io.netty.channel.epoll.EpollIoHandler$DefaultEpollIoRegistration.handle(EpollIoHandler.java:349)\n\tat io.netty.channel.epoll.EpollIoHandler.processReady(EpollIoHandler.java:546)\n\tat io.netty.channel.epoll.EpollIoHandler.run(EpollIoHandler.java:491)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
       "jobName": "paragraph_1791656000000_100000002",
       "id": "paragraph_1791656000000_100000002",
-      "status": "READY"
+      "dateCreated": "2026-10-10 19:00:56.983",
+      "dateStarted": "2026-10-10 19:01:09.169",
+      "dateFinished": "2026-10-10 19:01:29.330",
+      "status": "ERROR"
     },
     {
-      "text": "%spark.pyspark\nkafka_bootstrap_servers = \"kafka-0:29092,kafka-1:29092,kafka-2:29092\"\ntopic_name = \"global_financial_transactions\"\ndesc_file_path = \"/notebooks/daily_kafka_to_delta_spark_job/transaction.desc\"\n\nkafka_stream = (spark.readStream\n    .format(\"kafka\")\n    .option(\"kafka.bootstrap.servers\", kafka_bootstrap_servers)\n    .option(\"subscribe\", topic_name)\n    .option(\"startingOffsets\", \"earliest\")\n    .load())\n\n# Strip 5-byte Confluent wire format header\nraw_payload_df = kafka_stream.select(\n    col(\"key\").cast(\"string\").alias(\"kafka_key\"),\n    col(\"timestamp\").alias(\"kafka_timestamp\"),\n    expr(\"substring(value, 6, length(value) - 5)\").alias(\"raw_protobuf\")\n)\n\nparsed_stream_df = raw_payload_df.select(\n    col(\"kafka_key\"),\n    col(\"kafka_timestamp\"),\n    from_protobuf(col(\"raw_protobuf\"), \"finance.Transaction\", descFilePath=desc_file_path).alias(\"payload\")\n)\n\nprint(\"Kafka Protobuf Structured Stream subscribed to topic:\", topic_name)",
+      "text": "%spark.pyspark\nkafka_bootstrap_servers \u003d \"kafka-0:29092,kafka-1:29092,kafka-2:29092\"\ntopic_name \u003d \"global_financial_transactions\"\ndesc_file_path \u003d \"/notebooks/daily_kafka_to_delta_spark_job/transaction.desc\"\n\nkafka_stream \u003d (spark.readStream\n    .format(\"kafka\")\n    .option(\"kafka.bootstrap.servers\", kafka_bootstrap_servers)\n    .option(\"subscribe\", topic_name)\n    .option(\"startingOffsets\", \"earliest\")\n    .load())\n\n# Strip 5-byte Confluent wire format header\nraw_payload_df \u003d kafka_stream.select(\n    col(\"key\").cast(\"string\").alias(\"kafka_key\"),\n    col(\"timestamp\").alias(\"kafka_timestamp\"),\n    expr(\"substring(value, 6, length(value) - 5)\").alias(\"raw_protobuf\")\n)\n\nparsed_stream_df \u003d raw_payload_df.select(\n    col(\"kafka_key\"),\n    col(\"kafka_timestamp\"),\n    from_protobuf(col(\"raw_protobuf\"), \"finance.Transaction\", descFilePath\u003ddesc_file_path).alias(\"payload\")\n)\n\nprint(\"Kafka Protobuf Structured Stream subscribed to topic:\", topic_name)",
       "user": "anonymous",
+      "progress": 0,
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -57,13 +99,18 @@
         "params": {},
         "forms": {}
       },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
       "jobName": "paragraph_1791656000000_100000003",
       "id": "paragraph_1791656000000_100000003",
+      "dateCreated": "2026-10-10 19:00:56.983",
       "status": "READY"
     },
     {
-      "text": "%spark.pyspark\ndef upsert_to_delta(micro_batch_df, batch_id):\n    if micro_batch_df.rdd.isEmpty():\n        return\n\n    cleaned_df = micro_batch_df.select(\n        col(\"payload.transaction_id\").alias(\"transaction_id\"),\n        col(\"payload.timestamp\").alias(\"timestamp\"),\n        col(\"payload.amount\").alias(\"amount\"),\n        col(\"payload.currency\").alias(\"currency\"),\n        col(\"payload.merchant\").alias(\"merchant\"),\n        col(\"payload.transaction_type\").alias(\"transaction_type\"),\n        col(\"payload.is_flagged_fraud\").alias(\"is_flagged_fraud\"),\n        col(\"payload.device_type\").alias(\"device_type\"),\n        col(\"payload.user.user_id\").alias(\"user_id\"),\n        col(\"payload.user.full_name\").alias(\"user_full_name\"),\n        col(\"payload.user.email\").alias(\"user_email\"),\n        col(\"payload.user.ip_address\").alias(\"user_ip\"),\n        col(\"payload.location.country\").alias(\"country\"),\n        col(\"payload.location.city\").alias(\"city\"),\n        col(\"payload.location.latitude\").alias(\"latitude\"),\n        col(\"payload.location.longitude\").alias(\"longitude\"),\n        col(\"kafka_timestamp\")\n    ).filter(\"transaction_id IS NOT NULL\").dropDuplicates([\"transaction_id\"])\n\n    db_name = \"lakehouse\"\n    table_name = \"financial_transactions\"\n    full_table_name = f\"{db_name}.{table_name}\"\n    delta_target_path = f\"s3a://staging/databases/{db_name}.db/{table_name}\"\n\n    if spark.catalog.tableExists(full_table_name):\n        delta_table = DeltaTable.forName(spark, full_table_name)\n        (delta_table.alias(\"target\")\n            .merge(cleaned_df.alias(\"source\"), \"target.transaction_id = source.transaction_id\")\n            .whenMatchedUpdateAll()\n            .whenNotMatchedInsertAll()\n            .execute())\n        print(f\"[Batch {batch_id}] Successfully upserted records into Hive table '{full_table_name}'.\")\n    else:\n        (cleaned_df.write\n            .format(\"delta\")\n            .mode(\"overwrite\")\n            .option(\"path\", delta_target_path)\n            .saveAsTable(full_table_name))\n        print(f\"[Batch {batch_id}] Registered '{full_table_name}' in Hive Metastore and initialized at {delta_target_path}.\")\n\ncheckpoint_location = \"s3a://staging/delta/checkpoints/financial_transactions\"\n\nquery = (parsed_stream_df.writeStream\n    .format(\"delta\")\n    .foreachBatch(upsert_to_delta)\n    .option(\"checkpointLocation\", checkpoint_location)\n    .trigger(availableNow=True)\n    .start())\n\nquery.awaitTermination()\nprint(\"Structured Streaming upsert query completed successfully!\")",
+      "text": "%spark.pyspark\ndef upsert_to_delta(micro_batch_df, batch_id):\n    if micro_batch_df.rdd.isEmpty():\n        return\n\n    cleaned_df \u003d micro_batch_df.select(\n        col(\"payload.transaction_id\").alias(\"transaction_id\"),\n        col(\"payload.timestamp\").alias(\"timestamp\"),\n        col(\"payload.amount\").alias(\"amount\"),\n        col(\"payload.currency\").alias(\"currency\"),\n        col(\"payload.merchant\").alias(\"merchant\"),\n        col(\"payload.transaction_type\").alias(\"transaction_type\"),\n        col(\"payload.is_flagged_fraud\").alias(\"is_flagged_fraud\"),\n        col(\"payload.device_type\").alias(\"device_type\"),\n        col(\"payload.user.user_id\").alias(\"user_id\"),\n        col(\"payload.user.full_name\").alias(\"user_full_name\"),\n        col(\"payload.user.email\").alias(\"user_email\"),\n        col(\"payload.user.ip_address\").alias(\"user_ip\"),\n        col(\"payload.location.country\").alias(\"country\"),\n        col(\"payload.location.city\").alias(\"city\"),\n        col(\"payload.location.latitude\").alias(\"latitude\"),\n        col(\"payload.location.longitude\").alias(\"longitude\"),\n        col(\"kafka_timestamp\")\n    ).filter(\"transaction_id IS NOT NULL\").dropDuplicates([\"transaction_id\"])\n\n    db_name \u003d \"lakehouse\"\n    table_name \u003d \"financial_transactions\"\n    full_table_name \u003d f\"{db_name}.{table_name}\"\n    delta_target_path \u003d f\"s3a://staging/databases/{db_name}.db/{table_name}\"\n\n    if spark.catalog.tableExists(full_table_name):\n        cleaned_df.createOrReplaceTempView(\"batch_updates\")\n        spark.sql(f\"\"\"\n            MERGE INTO {full_table_name} AS target\n            USING batch_updates AS source\n            ON target.transaction_id \u003d source.transaction_id\n            WHEN MATCHED THEN UPDATE SET *\n            WHEN NOT MATCHED THEN INSERT *\n        \"\"\")\n        print(f\"[Batch {batch_id}] Successfully upserted records into Hive table \u0027{full_table_name}\u0027.\")\n    else:\n        (cleaned_df.write\n            .format(\"delta\")\n            .mode(\"overwrite\")\n            .option(\"path\", delta_target_path)\n            .saveAsTable(full_table_name))\n        print(f\"[Batch {batch_id}] Registered \u0027{full_table_name}\u0027 in Hive Metastore and initialized at {delta_target_path}.\")\n\ncheckpoint_location \u003d \"s3a://staging/delta/checkpoints/financial_transactions\"\n\nquery \u003d (parsed_stream_df.writeStream\n    .format(\"delta\")\n    .foreachBatch(upsert_to_delta)\n    .option(\"checkpointLocation\", checkpoint_location)\n    .trigger(availableNow\u003dTrue)\n    .start())\n\nquery.awaitTermination()\nprint(\"Structured Streaming upsert query completed successfully!\")",
       "user": "anonymous",
+      "progress": 0,
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -78,13 +125,18 @@
         "params": {},
         "forms": {}
       },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
       "jobName": "paragraph_1791656000000_100000004",
       "id": "paragraph_1791656000000_100000004",
+      "dateCreated": "2026-10-10 19:00:56.984",
       "status": "READY"
     },
     {
       "text": "%spark.sql\nSELECT transaction_id, user_full_name, amount, currency, merchant, is_flagged_fraud, country, kafka_timestamp\nFROM lakehouse.financial_transactions\nORDER BY kafka_timestamp DESC\nLIMIT 20;",
       "user": "anonymous",
+      "progress": 0,
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -99,12 +151,16 @@
         "params": {},
         "forms": {}
       },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
       "jobName": "paragraph_1791656000000_100000005",
       "id": "paragraph_1791656000000_100000005",
+      "dateCreated": "2026-10-10 19:00:56.984",
       "status": "READY"
     }
   ],
-  "name": "daily_kafka_to_delta_spark_job/stream_kafka_to_delta",
+  "name": "stream_kafka_to_delta",
   "id": "2KAFKADLT",
   "defaultInterpreterGroup": "spark",
   "version": "0.12.0",

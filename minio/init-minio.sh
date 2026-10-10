@@ -14,7 +14,10 @@ SPARK_EVENTS_FOLDER="spark-events"
 $MINIO_COMMAND &
 
 # 2. Wait for MinIO to become available (required for 'mc' to connect)
-/usr/bin/mc wait --timeout 30 http://localhost:9000
+until curl -s -f http://localhost:9000/minio/health/live > /dev/null 2>&1; do
+    echo "Waiting for MinIO to be ready..."
+    sleep 1
+done
 
 # 3. Configure the 'local' alias for the 'mc' client
 # 'mc' needs to know how to connect to the running server.

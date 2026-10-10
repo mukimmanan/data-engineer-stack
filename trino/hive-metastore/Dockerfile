@@ -44,7 +44,7 @@ RUN curl -o /opt/hive/lib/postgresql-${PG_DRIVER_VERSION}.jar ${PG_DRIVER_URL}
 ARG AWS_SDK_BUNDLE_VERSION=1.12.794
 # Download S3/Hadoop AWS libraries compatible with Spark 3.5.2 (Hadoop 3.3.x)
 RUN curl -f -L -o /opt/hive/lib/aws-java-sdk-bundle-${AWS_SDK_BUNDLE_VERSION}.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${AWS_SDK_BUNDLE_VERSION}/aws-java-sdk-bundle-${AWS_SDK_BUNDLE_VERSION}.jar
-COPY hive-metastore/hive-site.xml /opt/hive/conf/hive-site.xml
+COPY hive-site.xml /opt/hive/conf/hive-site.xml
 
 ARG AWS_SDK_VERSION=2.39.5
 ENV AWS_BUNDLE_JAR_URL=https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/${AWS_SDK_VERSION}/bundle-${AWS_SDK_VERSION}.jar

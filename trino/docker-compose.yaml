@@ -7,8 +7,8 @@ services:
     container_name: hive-metastore
     environment:
       - SERVICE_NAME=metastore
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-password}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-root_user}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-root_password}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_secure_postgres_password}
     deploy:
       resources:
@@ -26,13 +26,10 @@ services:
 
   hive-init:
     image: custom-hive:4.0.1
-    build:
-      context: ./hive-metastore
-      dockerfile: Dockerfile
     container_name: hive-init
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-password}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-root_user}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-root_password}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_secure_postgres_password}
     networks:
       - trino-network
@@ -44,8 +41,8 @@ services:
     hostname: trino-coordinator
     container_name: trino-coordinator
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-password}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-root_user}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-root_password}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_secure_postgres_password}
       - POSTGRES_USER=${POSTGRES_USER:-primary_user}
     deploy:
@@ -75,8 +72,8 @@ services:
     hostname: trino-worker-1
     container_name: trino-worker-1
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-password}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-root_user}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-root_password}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_secure_postgres_password}
       - POSTGRES_USER=${POSTGRES_USER:-primary_user}
     deploy:

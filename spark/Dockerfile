@@ -94,8 +94,9 @@ ENV ZEPPELIN_JAVA_OPTS="--add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=j
 # ============================================================
 # Permissions — give ownership to 'spark' user (UID 185)
 # ============================================================
-RUN chown -R 185:0 ${ZEPPELIN_HOME} && \
-    chmod -R g+w ${ZEPPELIN_HOME}
+RUN mkdir -p /eventlog /tmp/spark-events && \
+    chown -R 185:0 /eventlog /tmp/spark-events ${ZEPPELIN_HOME} /opt/spark/conf /opt/spark/work && \
+    chmod -R 777 /eventlog /tmp/spark-events /opt/spark/conf /opt/spark/work ${ZEPPELIN_HOME}
 
 # ============================================================
 # Entrypoint

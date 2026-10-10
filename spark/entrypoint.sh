@@ -8,14 +8,16 @@ set -e
 ROLE=${1:-$SPARK_ROLE}
 
 # Ensure eventlog directory exists with proper permissions
-mkdir -p /eventlog
-chmod 777 /eventlog
+mkdir -p /eventlog 2>/dev/null || true
+chmod 777 /eventlog 2>/dev/null || true
+mkdir -p /tmp/spark-events 2>/dev/null || true
 
 # Safely inject environment variables into spark-defaults.conf at container boot
 if [ -f /opt/spark/conf/spark-defaults.conf ]; then
-    sed -i "s/\${MINIO_ROOT_USER}/${MINIO_ROOT_USER:-admin}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
-    sed -i "s/\${MINIO_ROOT_PASSWORD}/${MINIO_ROOT_PASSWORD:-password}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
-    sed -i "s/\${POSTGRES_PASSWORD}/${POSTGRES_PASSWORD:-password}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+    sed -i "s/\${MINIO_ROOT_USER}/${MINIO_ROOT_USER:-root_user}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+    sed -i "s/\${MINIO_ROOT_PASSWORD}/${MINIO_ROOT_PASSWORD:-root_password}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+    sed -i "s/\${POSTGRES_PASSWORD}/${POSTGRES_PASSWORD:-iceberg}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+    grep -q "spark.hadoop.fs.s3a.input.stream.type" /opt/spark/conf/spark-defaults.conf 2>/dev/null || echo "spark.hadoop.fs.s3a.input.stream.type classic" >> /opt/spark/conf/spark-defaults.conf
 fi
 
 # --- Check for Zeppelin Role ---

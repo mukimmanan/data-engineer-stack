@@ -11,6 +11,7 @@ tmp/*
 *.pyc
 trino/conf/*/data/
 /spark/zepplin/*
+/spark/zep_notebooks/*/*
 
 # Secrets — never commit credentials
 *.env
@@ -28,7 +29,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Docker
+# Docker & Binaries
 *.tar
+*.jar
 docker-compose.override.yaml
 *_pb2.py
