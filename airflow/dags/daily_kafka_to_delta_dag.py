@@ -56,21 +56,23 @@ def execute_spark_job_on_cluster(**context):
     print(" ".join(spark_submit_cmd))
     print("=" * 60)
 
-    # Execute command and stream output
-    exec_instance = container.exec_run(
+    # Use low-level client API for streaming and inspecting exit code
+    exec_created = client.api.exec_create(
+        container=container.id,
         cmd=spark_submit_cmd,
         stdout=True,
-        stderr=True,
-        stream=True
+        stderr=True
     )
+    exec_id = exec_created["Id"]
 
-    for chunk in exec_instance.output:
+    output_stream = client.api.exec_start(exec_id, stream=True)
+    for chunk in output_stream:
         if chunk:
             sys.stdout.write(chunk.decode("utf-8", errors="replace"))
             sys.stdout.flush()
 
     # Inspect the execution exit code
-    exec_info = container.client.api.exec_inspect(exec_instance.exec_id)
+    exec_info = client.api.exec_inspect(exec_id)
     exit_code = exec_info.get("ExitCode")
 
     print(f"\nSpark Job Exit Code: {exit_code}")
