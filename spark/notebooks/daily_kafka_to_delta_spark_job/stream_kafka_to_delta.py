@@ -115,11 +115,13 @@ def main():
         .option("startingOffsets", "earliest")
         .load())
 
-    # Strip 5-byte Confluent wire format header
+    # Strip Confluent Protobuf wire format header:
+    # 1 byte magic + 4 bytes schema ID + 2 bytes message index = 7 bytes.
+    # SQL substring is 1-based, so substring(value, 8) extracts the raw Protobuf binary.
     raw_payload_df = kafka_stream.select(
         col("key").cast("string").alias("kafka_key"),
         col("timestamp").alias("kafka_timestamp"),
-        expr("substring(value, 6, length(value) - 5)").alias("raw_protobuf")
+        expr("substring(value, 8)").alias("raw_protobuf")
     )
 
     try:
@@ -127,7 +129,12 @@ def main():
         parsed_df = raw_payload_df.select(
             col("kafka_key"),
             col("kafka_timestamp"),
-            from_protobuf(col("raw_protobuf"), "finance.Transaction", descFilePath=desc_file_path).alias("payload")
+            from_protobuf(
+                col("raw_protobuf"),
+                "finance.Transaction",
+                descFilePath=desc_file_path,
+                options={"mode": "PERMISSIVE"}
+            ).alias("payload")
         )
     except Exception as e:
         print(f"Warning: Could not load spark-protobuf function ({e}). Processing without protobuf schema.")
