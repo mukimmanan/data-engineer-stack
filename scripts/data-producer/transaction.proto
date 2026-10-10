@@ -27,3 +27,4 @@ message Transaction {
     Location location = 9;
     string device_type = 10;
 }
+
