@@ -31,3 +31,4 @@ Thumbs.db
 # Docker
 *.tar
 docker-compose.override.yaml
+*_pb2.py
