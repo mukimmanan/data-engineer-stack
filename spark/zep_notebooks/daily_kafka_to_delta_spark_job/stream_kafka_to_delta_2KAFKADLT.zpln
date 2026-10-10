@@ -1,0 +1,120 @@
+{
+  "paragraphs": [
+    {
+      "text": "%md\n# Kafka to Delta Lake Streaming Upsert (MinIO S3)\n**DAG Association:** `daily_kafka_to_delta_spark_job`\n\nThis Zeppelin notebook covers the streaming ingestion pipeline:\n1. **Kafka Consumer:** Reads real-time Protobuf records from topic `global_financial_transactions`.\n2. **Protobuf Parser:** Strips Confluent 5-byte header and parses binary via `from_protobuf`.\n3. **Delta Lake Upsert:** Micro-batch `MERGE INTO` by `transaction_id` into MinIO storage.\n4. **Trigger AvailableNow:** Ingests all available streaming events and completes cleanly for batch orchestration.",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1791656000000_100000001",
+      "id": "paragraph_1791656000000_100000001",
+      "status": "READY"
+    },
+    {
+      "text": "%spark.pyspark\nimport os\nfrom pyspark.sql.functions import col, expr\nfrom pyspark.sql.protobuf.functions import from_protobuf\nfrom delta.tables import DeltaTable\n\nprint(\"Spark Version:\", spark.version)\nprint(\"S3A MinIO Endpoint:\", spark.conf.get(\"spark.hadoop.fs.s3a.endpoint\", \"http://minio:9000\"))",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1791656000000_100000002",
+      "id": "paragraph_1791656000000_100000002",
+      "status": "READY"
+    },
+    {
+      "text": "%spark.pyspark\nkafka_bootstrap_servers = \"kafka-0:29092,kafka-1:29092,kafka-2:29092\"\ntopic_name = \"global_financial_transactions\"\ndesc_file_path = \"/notebooks/transaction.desc\"\n\nkafka_stream = (spark.readStream\n    .format(\"kafka\")\n    .option(\"kafka.bootstrap.servers\", kafka_bootstrap_servers)\n    .option(\"subscribe\", topic_name)\n    .option(\"startingOffsets\", \"earliest\")\n    .load())\n\n# Strip 5-byte Confluent wire format header\nraw_payload_df = kafka_stream.select(\n    col(\"key\").cast(\"string\").alias(\"kafka_key\"),\n    col(\"timestamp\").alias(\"kafka_timestamp\"),\n    expr(\"substring(value, 6, length(value) - 5)\").alias(\"raw_protobuf\")\n)\n\nparsed_stream_df = raw_payload_df.select(\n    col(\"kafka_key\"),\n    col(\"kafka_timestamp\"),\n    from_protobuf(col(\"raw_protobuf\"), \"finance.Transaction\", descFilePath=desc_file_path).alias(\"payload\")\n)\n\nprint(\"Kafka Protobuf Structured Stream subscribed to topic:\", topic_name)",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1791656000000_100000003",
+      "id": "paragraph_1791656000000_100000003",
+      "status": "READY"
+    },
+    {
+      "text": "%spark.pyspark\ndef upsert_to_delta(micro_batch_df, batch_id):\n    if micro_batch_df.rdd.isEmpty():\n        return\n\n    cleaned_df = micro_batch_df.select(\n        col(\"payload.transaction_id\").alias(\"transaction_id\"),\n        col(\"payload.timestamp\").alias(\"timestamp\"),\n        col(\"payload.amount\").alias(\"amount\"),\n        col(\"payload.currency\").alias(\"currency\"),\n        col(\"payload.merchant\").alias(\"merchant\"),\n        col(\"payload.transaction_type\").alias(\"transaction_type\"),\n        col(\"payload.is_flagged_fraud\").alias(\"is_flagged_fraud\"),\n        col(\"payload.device_type\").alias(\"device_type\"),\n        col(\"payload.user.user_id\").alias(\"user_id\"),\n        col(\"payload.user.full_name\").alias(\"user_full_name\"),\n        col(\"payload.user.email\").alias(\"user_email\"),\n        col(\"payload.user.ip_address\").alias(\"user_ip\"),\n        col(\"payload.location.country\").alias(\"country\"),\n        col(\"payload.location.city\").alias(\"city\"),\n        col(\"payload.location.latitude\").alias(\"latitude\"),\n        col(\"payload.location.longitude\").alias(\"longitude\"),\n        col(\"kafka_timestamp\")\n    ).filter(\"transaction_id IS NOT NULL\").dropDuplicates([\"transaction_id\"])\n\n    delta_target_path = \"s3a://staging/delta/financial_transactions\"\n\n    if DeltaTable.isDeltaTable(spark, delta_target_path):\n        delta_table = DeltaTable.forPath(spark, delta_target_path)\n        (delta_table.alias(\"target\")\n            .merge(cleaned_df.alias(\"source\"), \"target.transaction_id = source.transaction_id\")\n            .whenMatchedUpdateAll()\n            .whenNotMatchedInsertAll()\n            .execute())\n        print(f\"[Batch {batch_id}] Successfully upserted {cleaned_df.count()} record(s) into Delta table.\")\n    else:\n        cleaned_df.write.format(\"delta\").mode(\"overwrite\").save(delta_target_path)\n        print(f\"[Batch {batch_id}] Initialized new Delta table at {delta_target_path}.\")\n\ncheckpoint_location = \"s3a://staging/delta/checkpoints/financial_transactions\"\n\nquery = (parsed_stream_df.writeStream\n    .format(\"delta\")\n    .foreachBatch(upsert_to_delta)\n    .option(\"checkpointLocation\", checkpoint_location)\n    .trigger(availableNow=True)\n    .start())\n\nquery.awaitTermination()\nprint(\"Structured Streaming upsert query completed successfully!\")",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1791656000000_100000004",
+      "id": "paragraph_1791656000000_100000004",
+      "status": "READY"
+    },
+    {
+      "text": "%spark.sql\nSELECT transaction_id, user_full_name, amount, currency, merchant, is_flagged_fraud, country, kafka_timestamp\nFROM delta.`s3a://staging/delta/financial_transactions`\nORDER BY kafka_timestamp DESC\nLIMIT 20;",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1791656000000_100000005",
+      "id": "paragraph_1791656000000_100000005",
+      "status": "READY"
+    }
+  ],
+  "name": "daily_kafka_to_delta_spark_job/stream_kafka_to_delta",
+  "id": "2KAFKADLT",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.12.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}
