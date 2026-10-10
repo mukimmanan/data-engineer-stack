@@ -80,8 +80,10 @@ def main():
     spark.sparkContext.setLogLevel("WARN")
 
     kafka_bootstrap_servers = "kafka-0:29092,kafka-1:29092,kafka-2:29092"
-    topic_name = "global_financial_transactions"
-    desc_file_path = "/notebooks/transaction.desc"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    desc_file_path = os.getenv("PROTO_DESC_PATH", os.path.join(script_dir, "transaction.desc"))
+    if not os.path.exists(desc_file_path):
+        desc_file_path = "/notebooks/daily_kafka_to_delta_spark_job/transaction.desc"
     checkpoint_path = "s3a://staging/delta/checkpoints/financial_transactions"
 
     print(f"Subscribing to Kafka Topic: {topic_name} at {kafka_bootstrap_servers}")

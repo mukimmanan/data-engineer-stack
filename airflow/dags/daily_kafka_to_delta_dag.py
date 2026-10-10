@@ -32,7 +32,7 @@ def execute_spark_job_on_cluster(**context):
     """
     docker_proxy_url = "tcp://docker-proxy:2375"
     target_container_name = "spark-master"
-    spark_script_path = "/notebooks/stream_kafka_to_delta.py"
+    spark_script_path = "/notebooks/daily_kafka_to_delta_spark_job/stream_kafka_to_delta.py"
 
     print(f"Connecting to Docker daemon via {docker_proxy_url}...")
     client = docker.DockerClient(base_url=docker_proxy_url)

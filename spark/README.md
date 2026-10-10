@@ -10,6 +10,8 @@ A standalone Apache Spark cluster (v4.2.0) for heavy data processing and ETL tas
 * The custom Dockerfile injects Hadoop AWS v2, Delta Lake, and Iceberg JARs directly into the image.
 * `entrypoint.sh` securely injects MinIO and Postgres credentials into `spark-defaults.conf` at runtime via `sed`, ensuring no plain-text passwords are leaked in source control.
 
-## Jobs & Notebooks
-* `notebooks/stream_kafka_to_delta.py`: PySpark Structured Streaming job that consumes Protobuf records from Kafka (`global_financial_transactions`) and performs a micro-batch UPSERT (`MERGE INTO`) into Delta Lake in MinIO (`s3a://staging/delta/financial_transactions`).
-* `notebooks/transaction.desc`: Compiled Protobuf descriptor file for high-performance schema deserialization via `from_protobuf`.
+## Jobs & Notebooks Structure (Per DAG)
+Scripts and notebooks are organized into directories per DAG:
+* `notebooks/daily_kafka_to_delta_spark_job/stream_kafka_to_delta.py`: PySpark Structured Streaming job that consumes Protobuf records from Kafka (`global_financial_transactions`) and performs a micro-batch UPSERT (`MERGE INTO`) into Delta Lake in MinIO (`s3a://staging/delta/financial_transactions`).
+* `notebooks/daily_kafka_to_delta_spark_job/transaction.desc`: Compiled Protobuf descriptor file for high-performance schema deserialization via `from_protobuf`.
+* `zep_notebooks/daily_kafka_to_delta_spark_job/stream_kafka_to_delta_2KAFKADLT.zpln`: Interactive Apache Zeppelin notebook note for exploratory testing and manual runs.
