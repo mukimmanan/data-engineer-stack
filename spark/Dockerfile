@@ -22,7 +22,7 @@ ARG AWS_SDK_VERSION=2.39.5
 # Delta Lake 4.2.0 for Spark 4.2
 ARG DELTA_VERSION=4.2.0
 
-# Iceberg 1.12.0 with Spark 4.2 runtime
+# Iceberg 1.12.0 with Spark runtime
 ARG ICEBERG_VERSION=1.12.0
 
 # PostgreSQL JDBC driver
@@ -30,24 +30,24 @@ ARG PG_DRIVER_VERSION=42.7.3
 
 RUN mkdir -p /opt/spark/jars && \
     # Hadoop AWS (S3A filesystem)
-    curl -f -L -o /opt/spark/jars/hadoop-aws-${HADOOP_AWS_VERSION}.jar \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/hadoop-aws-${HADOOP_AWS_VERSION}.jar \
         https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar && \
     # AWS SDK v2 bundle (required by Hadoop 3.5.0 S3A)
-    curl -f -L -o /opt/spark/jars/aws-sdk-bundle-${AWS_SDK_VERSION}.jar \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/aws-sdk-bundle-${AWS_SDK_VERSION}.jar \
         https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/${AWS_SDK_VERSION}/bundle-${AWS_SDK_VERSION}.jar && \
     # HTTP client (S3A dependency)
-    curl -f -L -o /opt/spark/jars/httpclient-4.5.14.jar \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/httpclient-4.5.14.jar \
         https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar && \
     # Delta Lake
-    curl -f -L -o /opt/spark/jars/delta-spark_2.13-${DELTA_VERSION}.jar \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/delta-spark_2.13-${DELTA_VERSION}.jar \
         https://repo1.maven.org/maven2/io/delta/delta-spark_2.13/${DELTA_VERSION}/delta-spark_2.13-${DELTA_VERSION}.jar && \
-    curl -f -L -o /opt/spark/jars/delta-storage-${DELTA_VERSION}.jar \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/delta-storage-${DELTA_VERSION}.jar \
         https://repo1.maven.org/maven2/io/delta/delta-storage/${DELTA_VERSION}/delta-storage-${DELTA_VERSION}.jar && \
     # Apache Iceberg
-    curl -f -L -o /opt/spark/jars/iceberg-spark-runtime-4.2_2.13-${ICEBERG_VERSION}.jar \
-        https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.2_2.13/${ICEBERG_VERSION}/iceberg-spark-runtime-4.2_2.13-${ICEBERG_VERSION}.jar && \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/iceberg-spark-runtime-4.0_2.13-${ICEBERG_VERSION}.jar \
+        https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.0_2.13/${ICEBERG_VERSION}/iceberg-spark-runtime-4.0_2.13-${ICEBERG_VERSION}.jar && \
     # PostgreSQL JDBC
-    curl -f -L -o /opt/spark/jars/postgresql-${PG_DRIVER_VERSION}.jar \
+    curl -f -L --retry 5 --retry-delay 3 -o /opt/spark/jars/postgresql-${PG_DRIVER_VERSION}.jar \
         https://jdbc.postgresql.org/download/postgresql-${PG_DRIVER_VERSION}.jar && \
     echo "All JARs downloaded successfully"
 
