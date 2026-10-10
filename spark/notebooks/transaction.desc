@@ -1,0 +1,27 @@
+
+ø
+transaction.protofinance"q
+User
+user_id (	RuserId
+	full_name (	RfullName
+email (	Remail
+
+ip_address (	R	ipAddress"r
+Location
+country (	Rcountry
+city (	Rcity
+latitude (Rlatitude
+	longitude (R	longitude"ê
+Transaction%
+transaction_id (	RtransactionId
+	timestamp (R	timestamp
+amount (Ramount
+currency (	Rcurrency
+merchant (	Rmerchant)
+transaction_type (	RtransactionType(
+is_flagged_fraud (RisFlaggedFraud!
+user (2.finance.UserRuser-
+location	 (2.finance.LocationRlocation
+device_type
+ (	R
+deviceTypebproto3
