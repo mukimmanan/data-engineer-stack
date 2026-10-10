@@ -11,6 +11,13 @@ ROLE=${1:-$SPARK_ROLE}
 mkdir -p /eventlog
 chmod 777 /eventlog
 
+# Safely inject environment variables into spark-defaults.conf at container boot
+if [ -f /opt/spark/conf/spark-defaults.conf ]; then
+    sed -i "s/\${MINIO_ROOT_USER}/${MINIO_ROOT_USER:-admin}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+    sed -i "s/\${MINIO_ROOT_PASSWORD}/${MINIO_ROOT_PASSWORD:-password}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+    sed -i "s/\${POSTGRES_PASSWORD}/${POSTGRES_PASSWORD:-password}/g" /opt/spark/conf/spark-defaults.conf 2>/dev/null || true
+fi
+
 # --- Check for Zeppelin Role ---
 if [ "$ROLE" = "zeppelin" ]; then
     echo "Launching Apache Zeppelin..."

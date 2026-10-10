@@ -5,14 +5,21 @@ from pyspark.sql.functions import col, expr
 from delta.tables import DeltaTable
 
 def get_spark_session():
-    """Initializes and returns a SparkSession with Delta Lake and MinIO S3A configs."""
+    """
+    Initializes and returns a SparkSession with Delta Lake, Hive Metastore, and MinIO S3A configs.
+    Connects to Hive Metastore so tables can be queried like AWS Glue & Athena.
+    """
     minio_user = os.getenv("MINIO_ROOT_USER", "admin")
     minio_password = os.getenv("MINIO_ROOT_PASSWORD", "password")
 
     builder = (SparkSession.builder
         .appName("KafkaToDeltaStreamingUpsert")
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        .enableHiveSupport()
+        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension,org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .config("spark.sql.catalogImplementation", "hive")
+        .config("spark.hadoop.hive.metastore.uris", "thrift://hive-metastore:9083")
+        .config("spark.sql.warehouse.dir", "s3a://staging/databases/")
         .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")
         .config("spark.hadoop.fs.s3a.access.key", minio_user)
         .config("spark.hadoop.fs.s3a.secret.key", minio_password)
@@ -23,7 +30,10 @@ def get_spark_session():
     return builder.getOrCreate()
 
 def upsert_to_delta(micro_batch_df, batch_id):
-    """Upserts each streaming micro-batch into the Delta table in MinIO."""
+    """
+    Upserts each streaming micro-batch into the Delta table and registers it in Hive Metastore.
+    Queryable by both Spark SQL and Trino (via minio_delta catalog) like Athena & Glue.
+    """
     if micro_batch_df.rdd.isEmpty():
         print(f"[Batch {batch_id}] Micro-batch is empty. Skipping.")
         return
@@ -53,10 +63,16 @@ def upsert_to_delta(micro_batch_df, batch_id):
     ).filter("transaction_id IS NOT NULL").dropDuplicates(["transaction_id"])
 
     spark = micro_batch_df.sparkSession
-    delta_target_path = "s3a://staging/delta/financial_transactions"
+    db_name = "lakehouse"
+    table_name = "financial_transactions"
+    full_table_name = f"{db_name}.{table_name}"
+    delta_target_path = f"s3a://staging/databases/{db_name}.db/{table_name}"
 
-    if DeltaTable.isDeltaTable(spark, delta_target_path):
-        delta_table = DeltaTable.forPath(spark, delta_target_path)
+    # Ensure database exists in Hive Metastore catalog
+    spark.sql(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+
+    if spark.catalog.tableExists(full_table_name):
+        delta_table = DeltaTable.forName(spark, full_table_name)
         (delta_table.alias("target")
             .merge(
                 cleaned_df.alias("source"),
@@ -65,21 +81,26 @@ def upsert_to_delta(micro_batch_df, batch_id):
             .whenMatchedUpdateAll()
             .whenNotMatchedInsertAll()
             .execute())
-        print(f"[Batch {batch_id}] Successfully upserted (MERGE) into Delta table at {delta_target_path}.")
+        print(f"[Batch {batch_id}] Successfully upserted (MERGE) into catalog table '{full_table_name}'.")
     else:
-        print(f"[Batch {batch_id}] Delta table not found at {delta_target_path}. Initializing new Delta table...")
-        cleaned_df.write.format("delta").mode("overwrite").save(delta_target_path)
-        print(f"[Batch {batch_id}] Delta table initialized at {delta_target_path}.")
+        print(f"[Batch {batch_id}] Table '{full_table_name}' not found in Hive catalog. Initializing and registering...")
+        (cleaned_df.write
+            .format("delta")
+            .mode("overwrite")
+            .option("path", delta_target_path)
+            .saveAsTable(full_table_name))
+        print(f"[Batch {batch_id}] Registered '{full_table_name}' in Hive Metastore at {delta_target_path}.")
 
 def main():
     print("=" * 60)
-    print("Starting Spark Streaming Kafka to Delta Lake Upsert Job")
+    print("Starting Spark Streaming Kafka to Delta Lake Upsert Job (Hive Catalog Enabled)")
     print("=" * 60)
 
     spark = get_spark_session()
     spark.sparkContext.setLogLevel("WARN")
 
     kafka_bootstrap_servers = "kafka-0:29092,kafka-1:29092,kafka-2:29092"
+    topic_name = "global_financial_transactions"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     desc_file_path = os.getenv("PROTO_DESC_PATH", os.path.join(script_dir, "transaction.desc"))
     if not os.path.exists(desc_file_path):
@@ -94,8 +115,7 @@ def main():
         .option("startingOffsets", "earliest")
         .load())
 
-    # Confluent Schema Registry prepends a 5-byte header (1 magic byte + 4 bytes schema ID).
-    # We strip the first 5 bytes using substring(value, 6, length(value)-5) to obtain pure Protobuf binary.
+    # Strip 5-byte Confluent wire format header
     raw_payload_df = kafka_stream.select(
         col("key").cast("string").alias("kafka_key"),
         col("timestamp").alias("kafka_timestamp"),
@@ -124,9 +144,8 @@ def main():
     print("Waiting for micro-batch stream execution to complete...")
     query.awaitTermination()
     print("=" * 60)
-    print("Spark Streaming Job Finished Successfully! All records ingested into Delta Lake.")
+    print("Spark Streaming Job Finished Successfully! Table available in Hive Metastore and Trino.")
     print("=" * 60)
 
 if __name__ == "__main__":
     main()
-
