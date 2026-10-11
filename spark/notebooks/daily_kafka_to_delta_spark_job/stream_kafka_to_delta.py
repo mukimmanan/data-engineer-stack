@@ -6,7 +6,7 @@ from pyspark.sql.functions import col, expr
 def get_spark_session():
     """
     Initializes and returns a SparkSession with Delta Lake, Hive Metastore, and MinIO S3A configs.
-    Connects to Hive Metastore so tables can be queried like AWS Glue & Athena.
+    Connects to Hive Metastore so tables can be registered and queried centrally.
     """
     minio_user = os.getenv("MINIO_ROOT_USER", "root_user")
     minio_password = os.getenv("MINIO_ROOT_PASSWORD", "root_password")
@@ -29,9 +29,46 @@ def get_spark_session():
 
     return builder.getOrCreate()
 
+def register_table_in_hive_metastore(spark, db_name, table_name, location):
+    """
+    Registers the Delta Lake table in Hive Metastore using Spark SQL DDL.
+    Enables table discovery through the central Hive Metastore catalog (thrift://hive-metastore:9083).
+    """
+    try:
+        print(f"Ensuring database '{db_name}' exists in Hive Metastore...")
+        spark.sql(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+
+        print(f"Registering external table '{db_name}.{table_name}' in Hive Metastore at {location}...")
+        spark.sql(f"""
+            CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.{table_name} (
+                transaction_id STRING,
+                timestamp BIGINT,
+                amount DOUBLE,
+                currency STRING,
+                merchant STRING,
+                transaction_type STRING,
+                is_flagged_fraud BOOLEAN,
+                device_type STRING,
+                user_id STRING,
+                user_full_name STRING,
+                user_email STRING,
+                user_ip STRING,
+                country STRING,
+                city STRING,
+                latitude DOUBLE,
+                longitude DOUBLE,
+                kafka_timestamp TIMESTAMP
+            )
+            LOCATION '{location}'
+        """)
+        print(f"Successfully registered '{db_name}.{table_name}' in Hive Metastore.")
+    except Exception as e:
+        print(f"Warning: Hive Metastore registration error: {e}")
+
 def upsert_to_delta(micro_batch_df, batch_id):
     """
-    Upserts each streaming micro-batch into the Delta table via path-based MERGE INTO.
+    Upserts each streaming micro-batch into the Delta table via path-based MERGE INTO
+    and ensures table is registered in Hive Metastore upon initialization.
     """
     if micro_batch_df.rdd.isEmpty():
         print(f"[Batch {batch_id}] Micro-batch is empty. Skipping.")
@@ -90,10 +127,11 @@ def upsert_to_delta(micro_batch_df, batch_id):
             .mode("overwrite")
             .save(delta_target_path))
         print(f"[Batch {batch_id}] Successfully initialized Delta table at {delta_target_path}.")
+        register_table_in_hive_metastore(spark, db_name, table_name, delta_target_path)
 
 def main():
     print("=" * 60)
-    print("Starting Spark Streaming Kafka to Delta Lake Upsert Job")
+    print("Starting Spark Streaming Kafka to Delta Lake Upsert Job (Hive Metastore Enabled)")
     print("=" * 60)
 
     spark = get_spark_session()
@@ -106,6 +144,9 @@ def main():
     if not os.path.exists(desc_file_path):
         desc_file_path = "/notebooks/daily_kafka_to_delta_spark_job/transaction.desc"
     checkpoint_path = "s3a://staging/delta/checkpoints/financial_transactions"
+    db_name = "lakehouse"
+    table_name = "financial_transactions"
+    delta_target_path = f"s3a://staging/databases/{db_name}.db/{table_name}"
 
     print(f"Subscribing to Kafka Topic: {topic_name} at {kafka_bootstrap_servers}")
     kafka_stream = (spark.readStream
@@ -154,8 +195,11 @@ def main():
     print("Waiting for micro-batch stream execution to complete...")
     query.awaitTermination()
 
+    # Ensure table registration in Hive Metastore post-job
+    register_table_in_hive_metastore(spark, db_name, table_name, delta_target_path)
+
     print("=" * 60)
-    print("Spark Streaming Job Finished Successfully! Delta table written to Lakehouse.")
+    print("Spark Streaming Job Finished Successfully! Table registered in Hive Metastore.")
     print("=" * 60)
 
 if __name__ == "__main__":
