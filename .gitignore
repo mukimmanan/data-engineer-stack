@@ -12,6 +12,7 @@ tmp/*
 trino/conf/*/data/
 trino/cloudbeaver/workspace/.data/
 trino/cloudbeaver/workspace/.metadata/
+trino/cloudbeaver/workspace/GlobalConfiguration/.dbeaver/project-settings.json
 /spark/zepplin/*
 /spark/zep_notebooks/*/*
 

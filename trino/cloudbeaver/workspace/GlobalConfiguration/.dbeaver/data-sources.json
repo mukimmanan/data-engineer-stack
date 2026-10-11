@@ -1,9 +1,9 @@
 {
   "folders": {},
   "connections": {
-    "trino-coordinator": {
-      "provider": "trino",
-      "driver": "trino",
+    "trino-lakehouse": {
+      "provider": "generic",
+      "driver": "trino_jdbc",
       "name": "Trino Lakehouse",
       "save-password": true,
       "read-only": false,
@@ -11,7 +11,7 @@
         "host": "trino-coordinator",
         "port": "8080",
         "database": "minio_delta",
-        "url": "jdbc:trino://trino-coordinator:8080/",
+        "url": "jdbc:trino://trino-coordinator:8080/minio_delta",
         "type": "dev",
         "auth-model": "native",
         "user": "trino"
