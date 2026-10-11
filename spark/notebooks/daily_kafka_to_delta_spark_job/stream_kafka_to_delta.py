@@ -126,13 +126,16 @@ def main():
 
     try:
         from pyspark.sql.protobuf.functions import from_protobuf
+        with open(desc_file_path, "rb") as f:
+            desc_bytes = f.read()
+
         parsed_df = raw_payload_df.select(
             col("kafka_key"),
             col("kafka_timestamp"),
             from_protobuf(
                 col("raw_protobuf"),
                 "finance.Transaction",
-                descFilePath=desc_file_path,
+                binaryDescriptorSet=desc_bytes,
                 options={"mode": "PERMISSIVE"}
             ).alias("payload")
         )

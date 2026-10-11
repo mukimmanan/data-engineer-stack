@@ -1,0 +1,8 @@
+# Declare binary files to prevent Git CRLF or text conversions
+*.desc binary
+*.jar binary
+*.tar binary
+*.parquet binary
+*.png binary
+*.jpg binary
+
