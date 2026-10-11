@@ -3,7 +3,7 @@
     {
       "text": "%md\n# Kafka to Delta Lake Streaming Upsert (Hive Metastore \u0026 MinIO)\n**DAG Association:** `daily_kafka_to_delta_spark_job`\n\nThis pipeline mirrors an **AWS Glue + Athena** Lakehouse architecture:\n1. **Kafka Stream:** Consumes Protobuf events from `global_financial_transactions`.\n2. **Hive Metastore Registration:** Automatically registers the table in Hive (`lakehouse.financial_transactions`).\n3. **Delta Lake Upsert:** Micro-batch `MERGE INTO` (upsert) by `transaction_id` using `DeltaTable.forName`.\n4. **Trino / Athena Querying:** Queryable from Trino via `SELECT * FROM minio_delta.lakehouse.financial_transactions`.",
       "user": "anonymous",
-      "dateUpdated": "2026-10-10 19:00:59.978",
+      "dateUpdated": "2026-10-11 13:33:38.447",
       "progress": 0,
       "config": {
         "colWidth": 12.0,
@@ -44,7 +44,7 @@
     {
       "text": "%spark.pyspark\nimport os\nfrom pyspark.sql.functions import col, expr\nfrom pyspark.sql.protobuf.functions import from_protobuf\n\nprint(\"Spark Version:\", spark.version)\nprint(\"Hive Metastore URI:\", spark.conf.get(\"spark.hadoop.hive.metastore.uris\", \"default\"))\nprint(\"MinIO S3A Endpoint:\", spark.conf.get(\"spark.hadoop.fs.s3a.endpoint\", \"default\"))\n\n# Ensure lakehouse database exists in Hive catalog\nspark.sql(\"CREATE DATABASE IF NOT EXISTS lakehouse\")\nprint(\"Databases in Hive Metastore:\", [db.name for db in spark.catalog.listDatabases()])",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 12:46:36.100",
+      "dateUpdated": "2026-10-11 13:34:35.096",
       "progress": 0,
       "config": {
         "colWidth": 12.0,
@@ -67,7 +67,7 @@
         "msg": [
           {
             "type": "TEXT",
-            "data": "Spark Version: 4.2.0\nHive Metastore URI: thrift://hive-metastore:9083\nMinIO S3A Endpoint: http://minio:9000\nHive Session ID \u003d 1c4b71f5-4b8a-4c7b-bd0d-0d09486a9c17\nDatabases in Hive Metastore: [\u0027default\u0027, \u0027lakehouse\u0027]\n"
+            "data": "Spark Version: 4.2.0\nHive Metastore URI: thrift://hive-metastore:9083\nMinIO S3A Endpoint: http://minio:9000\nDatabases in Hive Metastore: [\u0027default\u0027, \u0027lakehouse\u0027]\n"
           }
         ]
       },
@@ -80,13 +80,13 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d0"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d6"
             },
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d1"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d7"
             },
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d2"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d8"
             }
           ],
           "interpreterSettingId": "spark"
@@ -96,14 +96,14 @@
       "jobName": "paragraph_1791656000000_100000002",
       "id": "paragraph_1791656000000_100000002",
       "dateCreated": "2026-10-10 19:00:56.983",
-      "dateStarted": "2026-10-11 12:46:36.180",
-      "dateFinished": "2026-10-11 12:47:47.543",
+      "dateStarted": "2026-10-11 13:35:08.305",
+      "dateFinished": "2026-10-11 13:35:12.482",
       "status": "FINISHED"
     },
     {
-      "text": "%spark.pyspark\nkafka_bootstrap_servers \u003d \"kafka-0:29092,kafka-1:29092,kafka-2:29092\"\ntopic_name \u003d \"global_financial_transactions\"\ndesc_file_path \u003d \"/notebooks/daily_kafka_to_delta_spark_job/transaction.desc\"\n\nwith open(desc_file_path, \"rb\") as f:\n    desc_bytes \u003d f.read()\n\nkafka_stream \u003d (spark.readStream\n    .format(\"kafka\")\n    .option(\"kafka.bootstrap.servers\", kafka_bootstrap_servers)\n    .option(\"subscribe\", topic_name)\n    .option(\"startingOffsets\", \"earliest\")\n    .load())\n\n# Strip Confluent wire format header (1 byte magic + 4 bytes schema ID + 2 bytes index \u003d 7 bytes)\nraw_payload_df \u003d kafka_stream.select(\n    col(\"key\").cast(\"string\").alias(\"kafka_key\"),\n    col(\"timestamp\").alias(\"kafka_timestamp\"),\n    expr(\"substring(value, 8)\").alias(\"raw_protobuf\")\n)\n\nparsed_stream_df \u003d raw_payload_df.select(\n    col(\"kafka_key\"),\n    col(\"kafka_timestamp\"),\n    from_protobuf(col(\"raw_protobuf\"), \"finance.Transaction\", binaryDescriptorSet\u003ddesc_bytes, options\u003d{\"mode\": \"PERMISSIVE\"}).alias(\"payload\")\n)\n\nprint(\"Kafka Protobuf Structured Stream subscribed to topic:\", topic_name)",
+      "text": "%spark.pyspark\nimport os\nfrom pyspark.sql.functions import col, expr\nfrom pyspark.sql.protobuf.functions import from_protobuf\nkafka_bootstrap_servers \u003d \"kafka-0:29092,kafka-1:29092,kafka-2:29092\"\ntopic_name \u003d \"global_financial_transactions\"\n\ncandidate_desc_paths \u003d [\n    \"/notebooks/daily_kafka_to_delta_spark_job/transaction.desc\",\n    \"/opt/zeppelin/notebook/daily_kafka_to_delta_spark_job/transaction.desc\",\n    \"transaction.desc\"\n]\ndesc_file_path \u003d next((p for p in candidate_desc_paths if os.path.exists(p)), candidate_desc_paths[0])\nprint(f\"Using Protobuf Descriptor at: {desc_file_path}\")\n\nwith open(desc_file_path, \"rb\") as f:\n    desc_bytes \u003d f.read()\n\nkafka_stream \u003d (spark.readStream\n    .format(\"kafka\")\n    .option(\"kafka.bootstrap.servers\", kafka_bootstrap_servers)\n    .option(\"subscribe\", topic_name)\n    .option(\"startingOffsets\", \"earliest\")\n    .load())\n\n# Strip Confluent wire format header (1 byte magic + 4 bytes schema ID + 2 bytes index \u003d 7 bytes)\nraw_payload_df \u003d kafka_stream.select(\n    col(\"key\").cast(\"string\").alias(\"kafka_key\"),\n    col(\"timestamp\").alias(\"kafka_timestamp\"),\n    expr(\"substring(value, 8)\").alias(\"raw_protobuf\")\n)\n\nparsed_stream_df \u003d raw_payload_df.select(\n    col(\"kafka_key\"),\n    col(\"kafka_timestamp\"),\n    from_protobuf(col(\"raw_protobuf\"), \"finance.Transaction\", binaryDescriptorSet\u003ddesc_bytes, options\u003d{\"mode\": \"PERMISSIVE\"}).alias(\"payload\")\n)\n\nprint(\"Kafka Protobuf Structured Stream subscribed to topic:\", topic_name)",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 12:43:41.089",
+      "dateUpdated": "2026-10-11 13:34:38.288",
       "progress": 0,
       "config": {
         "colWidth": 12.0,
@@ -122,11 +122,11 @@
         "forms": {}
       },
       "results": {
-        "code": "ERROR",
+        "code": "SUCCESS",
         "msg": [
           {
             "type": "TEXT",
-            "data": "Fail to execute line 6: with open(desc_file_path, \"rb\") as f:\nTraceback (most recent call last):\n  File \"/tmp/python8386706015413023926/zeppelin_python.py\", line 162, in \u003cmodule\u003e\n    exec(code, _zcUserQueryNameSpace)\n  File \"\u003cstdin\u003e\", line 6, in \u003cmodule\u003e\nFileNotFoundError: [Errno 2] No such file or directory: \u0027/notebooks/daily_kafka_to_delta_spark_job/transaction.desc\u0027\n"
+            "data": "Using Protobuf Descriptor at: /notebooks/daily_kafka_to_delta_spark_job/transaction.desc\nKafka Protobuf Structured Stream subscribed to topic: global_financial_transactions\n"
           }
         ]
       },
@@ -136,13 +136,14 @@
       "jobName": "paragraph_1791656000000_100000003",
       "id": "paragraph_1791656000000_100000003",
       "dateCreated": "2026-10-10 19:00:56.983",
-      "dateStarted": "2026-10-11 12:43:41.190",
-      "dateFinished": "2026-10-11 12:43:41.320",
-      "status": "ERROR"
+      "dateStarted": "2026-10-11 13:35:12.788",
+      "dateFinished": "2026-10-11 13:35:13.972",
+      "status": "FINISHED"
     },
     {
-      "text": "%spark.pyspark\ndef upsert_to_delta(micro_batch_df, batch_id):\n    if micro_batch_df.rdd.isEmpty():\n        return\n\n    cleaned_df \u003d micro_batch_df.select(\n        col(\"payload.transaction_id\").alias(\"transaction_id\"),\n        col(\"payload.timestamp\").alias(\"timestamp\"),\n        col(\"payload.amount\").alias(\"amount\"),\n        col(\"payload.currency\").alias(\"currency\"),\n        col(\"payload.merchant\").alias(\"merchant\"),\n        col(\"payload.transaction_type\").alias(\"transaction_type\"),\n        col(\"payload.is_flagged_fraud\").alias(\"is_flagged_fraud\"),\n        col(\"payload.device_type\").alias(\"device_type\"),\n        col(\"payload.user.user_id\").alias(\"user_id\"),\n        col(\"payload.user.full_name\").alias(\"user_full_name\"),\n        col(\"payload.user.email\").alias(\"user_email\"),\n        col(\"payload.user.ip_address\").alias(\"user_ip\"),\n        col(\"payload.location.country\").alias(\"country\"),\n        col(\"payload.location.city\").alias(\"city\"),\n        col(\"payload.location.latitude\").alias(\"latitude\"),\n        col(\"payload.location.longitude\").alias(\"longitude\"),\n        col(\"kafka_timestamp\")\n    ).filter(\"transaction_id IS NOT NULL\").dropDuplicates([\"transaction_id\"])\n\n    db_name \u003d \"lakehouse\"\n    table_name \u003d \"financial_transactions\"\n    delta_target_path \u003d f\"s3a://staging/databases/{db_name}.db/{table_name}\"\n    delta_table_identifier \u003d f\"delta.`{delta_target_path}`\"\n\n    try:\n        spark.read.format(\"delta\").load(delta_target_path).take(1)\n        table_exists \u003d True\n    except Exception:\n        table_exists \u003d False\n\n    if table_exists:\n        cleaned_df.createOrReplaceTempView(\"batch_updates\")\n        spark.sql(f\"\"\"\n            MERGE INTO {delta_table_identifier} AS target\n            USING batch_updates AS source\n            ON target.transaction_id \u003d source.transaction_id\n            WHEN MATCHED THEN UPDATE SET *\n            WHEN NOT MATCHED THEN INSERT *\n        \"\"\")\n        print(f\"[Batch {batch_id}] Successfully upserted records into Delta table.\")\n    else:\n        (cleaned_df.write\n            .format(\"delta\")\n            .mode(\"overwrite\")\n            .save(delta_target_path))\n        print(f\"[Batch {batch_id}] Initialized Delta table at {delta_target_path}.\")\n\ncheckpoint_location \u003d \"s3a://staging/delta/checkpoints/financial_transactions\"\n\nquery \u003d (parsed_stream_df.writeStream\n    .format(\"delta\")\n    .foreachBatch(upsert_to_delta)\n    .option(\"checkpointLocation\", checkpoint_location)\n    .trigger(availableNow\u003dTrue)\n    .start())\n\nquery.awaitTermination()\nprint(\"Structured Streaming upsert query completed successfully!\")",
+      "text": "%spark.pyspark\nfrom pyspark.sql.functions import col, expr\nfrom py4j.java_gateway import JavaObject\nfrom pyspark.java_gateway import ensure_callback_server_started\n\ndef upsert_to_delta(micro_batch_df, batch_id):\n    if micro_batch_df.rdd.isEmpty():\n        return\n\n    batch_spark \u003d micro_batch_df.sparkSession\n\n    cleaned_df \u003d micro_batch_df.select(\n        col(\"payload.transaction_id\").alias(\"transaction_id\"),\n        col(\"payload.timestamp\").alias(\"timestamp\"),\n        col(\"payload.amount\").alias(\"amount\"),\n        col(\"payload.currency\").alias(\"currency\"),\n        col(\"payload.merchant\").alias(\"merchant\"),\n        col(\"payload.transaction_type\").alias(\"transaction_type\"),\n        col(\"payload.is_flagged_fraud\").alias(\"is_flagged_fraud\"),\n        col(\"payload.device_type\").alias(\"device_type\"),\n        col(\"payload.user.user_id\").alias(\"user_id\"),\n        col(\"payload.user.full_name\").alias(\"user_full_name\"),\n        col(\"payload.user.email\").alias(\"user_email\"),\n        col(\"payload.user.ip_address\").alias(\"user_ip\"),\n        col(\"payload.location.country\").alias(\"country\"),\n        col(\"payload.location.city\").alias(\"city\"),\n        col(\"payload.location.latitude\").alias(\"latitude\"),\n        col(\"payload.location.longitude\").alias(\"longitude\"),\n        col(\"kafka_timestamp\")\n    ).filter(\"transaction_id IS NOT NULL\").dropDuplicates([\"transaction_id\"])\n\n    db_name \u003d \"lakehouse\"\n    table_name \u003d \"financial_transactions\"\n    delta_target_path \u003d f\"s3a://staging/databases/{db_name}.db/{table_name}\"\n    delta_table_identifier \u003d f\"delta.`{delta_target_path}`\"\n\n    try:\n        batch_spark.read.format(\"delta\").load(delta_target_path).take(1)\n        table_exists \u003d True\n    except Exception:\n        table_exists \u003d False\n\n    if table_exists:\n        cleaned_df.createOrReplaceTempView(\"batch_updates\")\n        batch_spark.sql(f\"\"\"\n            MERGE INTO {delta_table_identifier} AS target\n            USING batch_updates AS source\n            ON target.transaction_id \u003d source.transaction_id\n            WHEN MATCHED THEN UPDATE SET *\n            WHEN NOT MATCHED THEN INSERT *\n        \"\"\")\n        print(f\"[Batch {batch_id}] Successfully upserted records into Delta table.\")\n    else:\n        (cleaned_df.write\n            .format(\"delta\")\n            .mode(\"overwrite\")\n            .save(delta_target_path))\n        print(f\"[Batch {batch_id}] Initialized Delta table at {delta_target_path}.\")\n\ncheckpoint_location \u003d \"s3a://staging/delta/checkpoints/financial_transactions\"\n\n# Ensure Py4J callback client points to 127.0.0.1 for PySpark foreachBatch inside Zeppelin\ngw \u003d spark._sc._gateway\nensure_callback_server_started(gw)\njgws_obj \u003d JavaObject(\"GATEWAY_SERVER\", gw._gateway_client)\njgws_obj.resetCallbackClient(gw.jvm.java.net.InetAddress.getByName(\"127.0.0.1\"), gw._python_proxy_port)\n\nquery \u003d (parsed_stream_df.writeStream\n    .format(\"delta\")\n    .foreachBatch(upsert_to_delta)\n    .option(\"checkpointLocation\", checkpoint_location)\n    .trigger(availableNow\u003dTrue)\n    .start())\n\nquery.awaitTermination()\nprint(\"Structured Streaming upsert query completed successfully!\")",
       "user": "anonymous",
+      "dateUpdated": "2026-10-11 13:35:46.965",
       "progress": 0,
       "config": {
         "colWidth": 12.0,
@@ -158,18 +159,29 @@
         "params": {},
         "forms": {}
       },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[Batch 4] Successfully upserted records into Delta table.\n[Batch 5] Successfully upserted records into Delta table.\nStructured Streaming upsert query completed successfully!\n"
+          }
+        ]
+      },
       "apps": [],
       "runtimeInfos": {},
       "progressUpdateIntervalMs": 500,
       "jobName": "paragraph_1791656000000_100000004",
       "id": "paragraph_1791656000000_100000004",
       "dateCreated": "2026-10-10 19:00:56.984",
-      "status": "READY"
+      "dateStarted": "2026-10-11 13:35:47.056",
+      "dateFinished": "2026-10-11 13:36:44.595",
+      "status": "FINISHED"
     },
     {
       "text": "%spark.sql\nSELECT transaction_id, user_full_name, amount, currency, merchant, is_flagged_fraud, country, kafka_timestamp\nFROM lakehouse.financial_transactions\nORDER BY kafka_timestamp DESC\nLIMIT 20;",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 12:47:59.772",
+      "dateUpdated": "2026-10-11 13:33:38.601",
       "progress": 60,
       "config": {
         "colWidth": 12.0,
@@ -233,8 +245,8 @@
       "title": "Spark SQL Query (%sql)",
       "text": "%sql\nSELECT count(*) AS total_records\nFROM lakehouse.financial_transactions;",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 12:48:44.036",
-      "progress": 0,
+      "dateUpdated": "2026-10-11 13:37:03.388",
+      "progress": 1,
       "config": {},
       "settings": {
         "params": {},
@@ -245,7 +257,7 @@
         "msg": [
           {
             "type": "TABLE",
-            "data": "total_records\n21722\n"
+            "data": "total_records\n31497\n"
           }
         ]
       },
@@ -258,10 +270,13 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d8"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d32"
             },
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d9"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d33"
+            },
+            {
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d34"
             }
           ],
           "interpreterSettingId": "spark"
@@ -271,15 +286,15 @@
       "jobName": "paragraph_1791722552281_161210527",
       "id": "paragraph_1791722552281_161210527",
       "dateCreated": "2026-10-11 12:42:32.292",
-      "dateStarted": "2026-10-11 12:48:44.093",
-      "dateFinished": "2026-10-11 12:48:46.842",
+      "dateStarted": "2026-10-11 13:37:03.439",
+      "dateFinished": "2026-10-11 13:37:39.111",
       "status": "FINISHED"
     },
     {
       "title": "Trino Query Engine (%trino)",
       "text": "%trino\nSELECT transaction_id, user_full_name, amount, currency, merchant, kafka_timestamp\nFROM minio_delta.lakehouse.financial_transactions\nORDER BY kafka_timestamp DESC\nLIMIT 10;",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 12:49:04.542",
+      "dateUpdated": "2026-10-11 13:37:26.135",
       "progress": 0,
       "config": {},
       "settings": {
@@ -291,7 +306,7 @@
         "msg": [
           {
             "type": "TABLE",
-            "data": "transaction_id\tuser_full_name\tamount\tcurrency\tmerchant\tkafka_timestamp\n05bcda54-2fa9-48ec-8305-86c5c7dae962\tKevin Schroeder\t1084.4\tSDG\tMitchell and Sons\t2026-10-11 11:47:16.208 UTC\n82371720-44e1-48f4-9b1a-f38c5bdd1921\tKathy Silva\t455.23\tMNT\tLawrence Ltd\t2026-10-11 11:47:16.071 UTC\n5a6b43e9-e5ba-47d5-8fc9-aab72d99cbb4\tJeffrey Marsh\t2572.57\tGYD\tBaker and Sons\t2026-10-11 11:47:15.938 UTC\nc94f6261-24c8-4b6a-a160-eb42898f01ea\tDillon Peterson\t921.41\tPHP\tWest, Mcdonald and Rivera\t2026-10-11 11:47:15.301 UTC\n8ba55fe8-5d8c-4c61-afe3-b4fc0dfd55e0\tJohnny Richardson\t488.12\tTMT\tReynolds-Reid\t2026-10-11 11:47:14.556 UTC\n2e13f06d-6d2d-48d2-97c7-2b266e860b53\tDavid Smith\t4119.24\tBWP\tAnderson, Miller and Goodman\t2026-10-11 11:47:14.400 UTC\nd3831815-bc8f-43ed-8faa-9da4249db1e5\tMichael Mendoza\t1593.46\tAFN\tHolloway-Chase\t2026-10-11 11:47:14.293 UTC\nb58882a3-22ee-42fd-a909-57f3b8cd64eb\tJesus Martin\t2990.15\tEUR\tJoseph Inc\t2026-10-11 11:47:13.508 UTC\n4d76e53f-079c-4a34-9470-b66f9306fd3b\tLarry Wood\t1645.41\tTND\tPadilla Ltd\t2026-10-11 11:47:13.148 UTC\n3dad8f3b-e12e-4dfa-b95a-944f6a40af9a\tCody Ray\t4261.02\tTND\tPatel, Nelson and Barrett\t2026-10-11 11:47:12.564 UTC\n"
+            "data": "transaction_id\tuser_full_name\tamount\tcurrency\tmerchant\tkafka_timestamp\nc6760fa9-75ac-4339-9806-b0670911cb4f\tSarah Montoya\t358.12\tGBP\tMacdonald Ltd\t2026-10-11 13:36:21.894 UTC\nc0896769-0078-4548-868f-660971ce2a10\tMr. Anthony George\t771.62\tVUV\tWebster-Friedman\t2026-10-11 13:36:21.533 UTC\ne600df57-2ccb-41eb-929f-51329be0b966\tErika Lawson\t165.14\tSOS\tJohnson, Sanchez and Pope\t2026-10-11 13:36:21.020 UTC\n1b7f031c-2e78-4b1e-8899-2ed48066e86d\tErika King MD\t4807.11\tBZD\tWilliams-Booker\t2026-10-11 13:36:20.140 UTC\ne7f00892-eeb7-421e-aa33-894e40751877\tPaul Flores\t3453.99\tDJF\tCompton PLC\t2026-10-11 13:36:19.182 UTC\ndcb6e9d2-4659-4111-b035-45cbb5db589a\tCarrie Bray\t2406.62\tSOS\tNavarro, Cordova and Garcia\t2026-10-11 13:36:18.602 UTC\n1af91ebc-8289-44ab-be6a-f9852bf7a924\tSean Hoffman MD\t2851.46\tMNT\tWhite, Smith and Santana\t2026-10-11 13:36:17.880 UTC\n1486cb7b-82d9-487b-86a9-c467998b00f4\tThomas Flores\t3251.5\tAED\tClark, Anderson and Moreno\t2026-10-11 13:36:16.947 UTC\n8cc82373-7bce-4707-9f24-6387fec0e861\tApril Vance\t4219.05\tRUB\tCook Group\t2026-10-11 13:36:16.141 UTC\n6701acf9-cd35-4baa-863d-3b824f923fb1\tJulie Maxwell\t2694.54\tCZK\tHarris, Evans and Christian\t2026-10-11 13:36:15.663 UTC\n"
           }
         ]
       },
@@ -301,8 +316,8 @@
       "jobName": "paragraph_1791722570320_899634265",
       "id": "paragraph_1791722570320_899634265",
       "dateCreated": "2026-10-11 12:42:50.320",
-      "dateStarted": "2026-10-11 12:49:04.616",
-      "dateFinished": "2026-10-11 12:49:16.581",
+      "dateStarted": "2026-10-11 13:37:26.864",
+      "dateFinished": "2026-10-11 13:38:21.242",
       "status": "FINISHED"
     }
   ],

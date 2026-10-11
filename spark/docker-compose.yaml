@@ -160,6 +160,7 @@ services:
       - ./conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
       - ./zep_conf/interpreter.json:/opt/zeppelin/conf_seed/interpreter.json:ro
       - ./zep_notebooks:/opt/zeppelin/notebook
+      - ./notebooks:/notebooks
       - ../trino/hive-metastore/hive-site.xml:/opt/spark/conf/hive-site.xml:ro
     command: ["zeppelin", "/opt/zeppelin/bin/zeppelin.sh"]
 
