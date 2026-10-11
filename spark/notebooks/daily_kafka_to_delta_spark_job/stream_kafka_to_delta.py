@@ -68,8 +68,8 @@ def register_table_in_hive_metastore(spark, db_name, table_name, location):
             pg_host = os.getenv("POSTGRES_HOST", "postgres")
             pg_port = os.getenv("POSTGRES_PORT", "5432")
             pg_db = os.getenv("POSTGRES_HIVE_DB", "hive")
-            pg_user = os.getenv("POSTGRES_USER", "primary_user")
-            pg_password = os.getenv("POSTGRES_PASSWORD", "primary_password")
+            pg_user = os.getenv("POSTGRES_HIVE_USER", os.getenv("POSTGRES_USER", "hive"))
+            pg_password = os.getenv("POSTGRES_HIVE_PASSWORD", os.getenv("POSTGRES_PASSWORD", "hive"))
 
             jdbc_url = f"jdbc:postgresql://{pg_host}:{pg_port}/{pg_db}"
             conn = spark._jvm.java.sql.DriverManager.getConnection(jdbc_url, pg_user, pg_password)

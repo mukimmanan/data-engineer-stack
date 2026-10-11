@@ -143,7 +143,7 @@
     {
       "text": "%spark.pyspark\nfrom pyspark.sql.functions import col, expr\nfrom py4j.java_gateway import JavaObject\nfrom pyspark.java_gateway import ensure_callback_server_started\n\ndef upsert_to_delta(micro_batch_df, batch_id):\n    if micro_batch_df.rdd.isEmpty():\n        return\n\n    batch_spark \u003d micro_batch_df.sparkSession\n\n    cleaned_df \u003d micro_batch_df.select(\n        col(\"payload.transaction_id\").alias(\"transaction_id\"),\n        col(\"payload.timestamp\").alias(\"timestamp\"),\n        col(\"payload.amount\").alias(\"amount\"),\n        col(\"payload.currency\").alias(\"currency\"),\n        col(\"payload.merchant\").alias(\"merchant\"),\n        col(\"payload.transaction_type\").alias(\"transaction_type\"),\n        col(\"payload.is_flagged_fraud\").alias(\"is_flagged_fraud\"),\n        col(\"payload.device_type\").alias(\"device_type\"),\n        col(\"payload.user.user_id\").alias(\"user_id\"),\n        col(\"payload.user.full_name\").alias(\"user_full_name\"),\n        col(\"payload.user.email\").alias(\"user_email\"),\n        col(\"payload.user.ip_address\").alias(\"user_ip\"),\n        col(\"payload.location.country\").alias(\"country\"),\n        col(\"payload.location.city\").alias(\"city\"),\n        col(\"payload.location.latitude\").alias(\"latitude\"),\n        col(\"payload.location.longitude\").alias(\"longitude\"),\n        col(\"kafka_timestamp\")\n    ).filter(\"transaction_id IS NOT NULL\").dropDuplicates([\"transaction_id\"])\n\n    db_name \u003d \"lakehouse\"\n    table_name \u003d \"financial_transactions\"\n    delta_target_path \u003d f\"s3a://staging/databases/{db_name}.db/{table_name}\"\n    delta_table_identifier \u003d f\"delta.`{delta_target_path}`\"\n\n    try:\n        batch_spark.read.format(\"delta\").load(delta_target_path).take(1)\n        table_exists \u003d True\n    except Exception:\n        table_exists \u003d False\n\n    if table_exists:\n        cleaned_df.createOrReplaceTempView(\"batch_updates\")\n        batch_spark.sql(f\"\"\"\n            MERGE INTO {delta_table_identifier} AS target\n            USING batch_updates AS source\n            ON target.transaction_id \u003d source.transaction_id\n            WHEN MATCHED THEN UPDATE SET *\n            WHEN NOT MATCHED THEN INSERT *\n        \"\"\")\n        print(f\"[Batch {batch_id}] Successfully upserted records into Delta table.\")\n    else:\n        (cleaned_df.write\n            .format(\"delta\")\n            .mode(\"overwrite\")\n            .save(delta_target_path))\n        print(f\"[Batch {batch_id}] Initialized Delta table at {delta_target_path}.\")\n\ncheckpoint_location \u003d \"s3a://staging/delta/checkpoints/financial_transactions\"\n\n# Ensure Py4J callback client points to 127.0.0.1 for PySpark foreachBatch inside Zeppelin\ngw \u003d spark._sc._gateway\nensure_callback_server_started(gw)\njgws_obj \u003d JavaObject(\"GATEWAY_SERVER\", gw._gateway_client)\njgws_obj.resetCallbackClient(gw.jvm.java.net.InetAddress.getByName(\"127.0.0.1\"), gw._python_proxy_port)\n\nquery \u003d (parsed_stream_df.writeStream\n    .format(\"delta\")\n    .foreachBatch(upsert_to_delta)\n    .option(\"checkpointLocation\", checkpoint_location)\n    .trigger(availableNow\u003dTrue)\n    .start())\n\nquery.awaitTermination()\nprint(\"Structured Streaming upsert query completed successfully!\")",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 13:35:46.965",
+      "dateUpdated": "2026-10-11 14:11:33.304",
       "progress": 0,
       "config": {
         "colWidth": 12.0,
@@ -153,7 +153,9 @@
           "editOnDblClick": false,
           "completionKey": "TAB",
           "completionSupport": true
-        }
+        },
+        "enabled": true,
+        "results": {}
       },
       "settings": {
         "params": {},
@@ -181,11 +183,69 @@
     {
       "text": "%spark.sql\nSELECT transaction_id, user_full_name, amount, currency, merchant, is_flagged_fraud, country, kafka_timestamp\nFROM lakehouse.financial_transactions\nORDER BY kafka_timestamp DESC\nLIMIT 20;",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 13:33:38.601",
-      "progress": 60,
+      "dateUpdated": "2026-10-11 14:12:35.355",
+      "progress": 37,
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "enabled": true,
+        "results": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TABLE",
+            "data": "transaction_id\tuser_full_name\tamount\tcurrency\tmerchant\tis_flagged_fraud\tcountry\tkafka_timestamp\nc6760fa9-75ac-4339-9806-b0670911cb4f\tSarah Montoya\t358.12\tGBP\tMacdonald Ltd\tnull\tTuvalu\t2026-10-11 13:36:21.894\nc0896769-0078-4548-868f-660971ce2a10\tMr. Anthony George\t771.62\tVUV\tWebster-Friedman\tnull\tGrenada\t2026-10-11 13:36:21.533\ne600df57-2ccb-41eb-929f-51329be0b966\tErika Lawson\t165.14\tSOS\tJohnson, Sanchez and Pope\tnull\tBrunei Darussalam\t2026-10-11 13:36:21.02\n1b7f031c-2e78-4b1e-8899-2ed48066e86d\tErika King MD\t4807.11\tBZD\tWilliams-Booker\tnull\tSyrian Arab Republic\t2026-10-11 13:36:20.14\ne7f00892-eeb7-421e-aa33-894e40751877\tPaul Flores\t3453.99\tDJF\tCompton PLC\tnull\tHonduras\t2026-10-11 13:36:19.182\ndcb6e9d2-4659-4111-b035-45cbb5db589a\tCarrie Bray\t2406.62\tSOS\tNavarro, Cordova and Garcia\tnull\tThailand\t2026-10-11 13:36:18.602\n1af91ebc-8289-44ab-be6a-f9852bf7a924\tSean Hoffman MD\t2851.46\tMNT\tWhite, Smith and Santana\tnull\tNorth Macedonia\t2026-10-11 13:36:17.88\n1486cb7b-82d9-487b-86a9-c467998b00f4\tThomas Flores\t3251.5\tAED\tClark, Anderson and Moreno\ttrue\tChile\t2026-10-11 13:36:16.947\n8cc82373-7bce-4707-9f24-6387fec0e861\tApril Vance\t4219.05\tRUB\tCook Group\tnull\tRomania\t2026-10-11 13:36:16.141\n6701acf9-cd35-4baa-863d-3b824f923fb1\tJulie Maxwell\t2694.54\tCZK\tHarris, Evans and Christian\tnull\tIsrael\t2026-10-11 13:36:15.663\n2ed13a1b-d1a2-4484-b2e9-bc84a50a489c\tCharles Campbell\t1690.03\tPAB\tGomez, Ward and Martin\tnull\tFinland\t2026-10-11 13:36:15.063\nde93dc3a-bd31-4b0f-a3f2-c85cccde71ad\tDominic Ballard\t1783.26\tTVD\tRogers, Miller and Nunez\tnull\tLiberia\t2026-10-11 13:36:14.771\n46c1f163-17e2-4ccf-8177-869dedd1a6d6\tMary Adams\t1444.32\tAED\tHines LLC\tnull\tLuxembourg\t2026-10-11 13:36:13.84\n43d6e000-f0a0-45f2-8c80-079f5332e252\tJames Nunez\t4293.02\tMMK\tRay, Schmitt and Baldwin\tnull\tPapua New Guinea\t2026-10-11 13:36:13.222\n8e1a5c64-64ae-4486-aa7a-634a12841d91\tLauren Flynn\t1860.23\tSBD\tBriggs-King\tnull\tFalkland Islands (Malvinas)\t2026-10-11 13:36:13.064\naf655630-ec74-472b-a5d7-1d7aec2b5235\tJeffrey Gonzalez\t2015.02\tNZD\tAllen-Wells\tnull\tKuwait\t2026-10-11 13:36:12.201\ndaffc984-ef80-47cd-91b0-8532f2139832\tGail Reyes\t3375.73\tTVD\tGarrett, Barr and Powell\tnull\tCayman Islands\t2026-10-11 13:36:11.628\n8de4c90a-1694-4988-87b7-6673346c2f30\tMeagan Greer\t3822.31\tDZD\tCraig-Reed\tnull\tSenegal\t2026-10-11 13:36:11.051\nbdcb42d2-74cb-4342-9815-04060786ccbf\tDavid Butler\t494.3\tSOS\tBell Ltd\tnull\tTurkey\t2026-10-11 13:36:10.639\nd549a398-c78a-481a-99d1-40a9516eb380\tAnthony Fisher\t2377.96\tGMD\tArnold Group\tnull\tMexico\t2026-10-11 13:36:09.825\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d71"
+            },
+            {
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d72"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1791656000000_100000005",
+      "id": "paragraph_1791656000000_100000005",
+      "dateCreated": "2026-10-10 19:00:56.984",
+      "dateStarted": "2026-10-11 14:12:35.402",
+      "dateFinished": "2026-10-11 14:12:36.441",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%trino\n\nSELECT count(*) AS total_records\nFROM lakehouse.financial_transactions;",
+      "user": "anonymous",
+      "dateUpdated": "2026-10-11 14:13:09.196",
+      "progress": 0,
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true,
         "editorSetting": {
           "language": "sql",
           "editOnDblClick": false,
@@ -202,52 +262,33 @@
         "msg": [
           {
             "type": "TABLE",
-            "data": "transaction_id\tuser_full_name\tamount\tcurrency\tmerchant\tis_flagged_fraud\tcountry\tkafka_timestamp\n05bcda54-2fa9-48ec-8305-86c5c7dae962\tKevin Schroeder\t1084.4\tSDG\tMitchell and Sons\tnull\tSaint Lucia\t2026-10-11 11:47:16.208\n82371720-44e1-48f4-9b1a-f38c5bdd1921\tKathy Silva\t455.23\tMNT\tLawrence Ltd\tnull\tIreland\t2026-10-11 11:47:16.071\n5a6b43e9-e5ba-47d5-8fc9-aab72d99cbb4\tJeffrey Marsh\t2572.57\tGYD\tBaker and Sons\tnull\tSeychelles\t2026-10-11 11:47:15.938\nc94f6261-24c8-4b6a-a160-eb42898f01ea\tDillon Peterson\t921.41\tPHP\tWest, Mcdonald and Rivera\tnull\tIran\t2026-10-11 11:47:15.301\n8ba55fe8-5d8c-4c61-afe3-b4fc0dfd55e0\tJohnny Richardson\t488.12\tTMT\tReynolds-Reid\tnull\tCote d\u0027Ivoire\t2026-10-11 11:47:14.556\n2e13f06d-6d2d-48d2-97c7-2b266e860b53\tDavid Smith\t4119.24\tBWP\tAnderson, Miller and Goodman\tnull\tVanuatu\t2026-10-11 11:47:14.4\nd3831815-bc8f-43ed-8faa-9da4249db1e5\tMichael Mendoza\t1593.46\tAFN\tHolloway-Chase\tnull\tKuwait\t2026-10-11 11:47:14.293\nb58882a3-22ee-42fd-a909-57f3b8cd64eb\tJesus Martin\t2990.15\tEUR\tJoseph Inc\tnull\tMexico\t2026-10-11 11:47:13.508\n4d76e53f-079c-4a34-9470-b66f9306fd3b\tLarry Wood\t1645.41\tTND\tPadilla Ltd\tnull\tSao Tome and Principe\t2026-10-11 11:47:13.148\n3dad8f3b-e12e-4dfa-b95a-944f6a40af9a\tCody Ray\t4261.02\tTND\tPatel, Nelson and Barrett\tnull\tSvalbard \u0026 Jan Mayen Islands\t2026-10-11 11:47:12.564\ncc77f92c-ed72-41fd-a09f-0a1a2cc2d1a9\tJudith Reeves\t3446.56\tBWP\tHerring-Shah\tnull\tSwitzerland\t2026-10-11 11:47:11.63\n94692c08-6330-48f1-8d81-35ff2fe37daa\tKimberly Gonzalez\t1421.52\tSPL\tSmith LLC\tnull\tMoldova\t2026-10-11 11:47:11.359\n2499f2fd-8913-4ca8-97b6-a41bd398755d\tEmily Dixon\t257.84\tUAH\tMontgomery, Wilson and Shea\tnull\tBarbados\t2026-10-11 11:47:10.532\nd3e5224b-ba4a-471e-8f8f-fd7938df0313\tJason Hartman\t2564.08\tMGA\tHall Ltd\tnull\tNepal\t2026-10-11 11:47:09.872\na45bb590-5436-4a13-8ffd-0406719a269c\tDan Wells\t782.85\tJEP\tReid-Fernandez\tnull\tFrench Southern Territories\t2026-10-11 11:47:09.439\n95ec7eb6-d2bd-4f5b-85c6-df89b154284f\tKenneth Smith\t1106.51\tTRY\tBrown and Sons\tnull\tSyrian Arab Republic\t2026-10-11 11:47:09.329\n14c05513-6f7d-4cfe-bac9-18a5aa195bf4\tLuis Stewart\t1885.72\tKWD\tCarter Inc\tnull\tSeychelles\t2026-10-11 11:47:08.361\nd6b251f5-2dc9-4047-a901-b260dae9d9cc\tAshley Miller\t95.94\tMDL\tMiranda-Freeman\tnull\tKyrgyz Republic\t2026-10-11 11:47:07.508\n93916fcb-b370-4e02-9fb7-11c3ca461711\tJodi Rocha\t875.47\tKZT\tBarnes, Johnson and Jackson\tnull\tGeorgia\t2026-10-11 11:47:07.055\n244cfff8-420e-4837-b285-875b2d4412b7\tDavid Thompson\t1202.89\tUZS\tHenry, Deleon and Garcia\tnull\tThailand\t2026-10-11 11:47:06.672\n"
+            "data": "total_records\n31497\n"
           }
         ]
       },
       "apps": [],
-      "runtimeInfos": {
-        "jobUrl": {
-          "propertyName": "jobUrl",
-          "label": "SPARK JOB",
-          "tooltip": "View in Spark web UI",
-          "group": "spark",
-          "values": [
-            {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d3"
-            },
-            {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d4"
-            },
-            {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d5"
-            },
-            {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d6"
-            },
-            {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d7"
-            }
-          ],
-          "interpreterSettingId": "spark"
-        }
-      },
+      "runtimeInfos": {},
       "progressUpdateIntervalMs": 500,
-      "jobName": "paragraph_1791656000000_100000005",
-      "id": "paragraph_1791656000000_100000005",
-      "dateCreated": "2026-10-10 19:00:56.984",
-      "dateStarted": "2026-10-11 12:47:59.814",
-      "dateFinished": "2026-10-11 12:48:29.314",
+      "jobName": "paragraph_1791727964738_563821194",
+      "id": "paragraph_1791727964738_563821194",
+      "dateCreated": "2026-10-11 14:12:44.742",
+      "dateStarted": "2026-10-11 14:13:09.233",
+      "dateFinished": "2026-10-11 14:13:13.629",
       "status": "FINISHED"
     },
     {
       "title": "Spark SQL Query (%sql)",
-      "text": "%sql\nSELECT count(*) AS total_records\nFROM lakehouse.financial_transactions;",
+      "text": "",
       "user": "anonymous",
-      "dateUpdated": "2026-10-11 13:37:03.388",
-      "progress": 1,
-      "config": {},
+      "dateUpdated": "2026-10-11 14:12:42.500",
+      "progress": 26,
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {}
+      },
       "settings": {
         "params": {},
         "forms": {}
@@ -270,13 +311,10 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d32"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d67"
             },
             {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d33"
-            },
-            {
-              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d34"
+              "jobUrl": "http://127.0.0.1:4040/jobs/job?id\u003d68"
             }
           ],
           "interpreterSettingId": "spark"
@@ -286,8 +324,8 @@
       "jobName": "paragraph_1791722552281_161210527",
       "id": "paragraph_1791722552281_161210527",
       "dateCreated": "2026-10-11 12:42:32.292",
-      "dateStarted": "2026-10-11 13:37:03.439",
-      "dateFinished": "2026-10-11 13:37:39.111",
+      "dateStarted": "2026-10-11 14:12:20.429",
+      "dateFinished": "2026-10-11 14:12:21.334",
       "status": "FINISHED"
     },
     {
