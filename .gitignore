@@ -10,6 +10,8 @@ tmp/*
 .ipynb_checkpoints/
 *.pyc
 trino/conf/*/data/
+trino/cloudbeaver/workspace/.data/
+trino/cloudbeaver/workspace/.metadata/
 /spark/zepplin/*
 /spark/zep_notebooks/*/*
 

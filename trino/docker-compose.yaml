@@ -93,6 +93,35 @@ services:
       trino-coordinator:
         condition: service_healthy
 
+  trino-query-ui:
+    image: dbeaver/cloudbeaver:latest
+    container_name: trino-query-ui
+    hostname: trino-query-ui
+    environment:
+      - CB_SERVER_NAME=Trino Query UI
+      - CB_SERVER_URL=http://localhost:8978
+      - CB_ADMIN_NAME=admin
+      - CB_ADMIN_PASSWORD=admin
+      - CLOUDBEAVER_APP_ANONYMOUS_ACCESS_ENABLED=true
+      - CLOUDBEAVER_APP_GRANT_CONNECTIONS_ACCESS_TO_ANONYMOUS_TEAM=true
+      - CLOUDBEAVER_APP_SUPPORTS_CUSTOM_CONNECTIONS=true
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    volumes:
+      - ./cloudbeaver/workspace:/opt/cloudbeaver/workspace
+    ports:
+      - "8978:8978"
+    networks:
+      - trino-network
+      - shared-network
+    restart: unless-stopped
+    depends_on:
+      trino-coordinator:
+        condition: service_healthy
+
 networks:
   shared-network:
     external: true
