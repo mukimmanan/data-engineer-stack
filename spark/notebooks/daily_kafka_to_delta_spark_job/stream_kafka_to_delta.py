@@ -1,8 +1,5 @@
 import os
 import sys
-import time
-import json
-import urllib.request
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, expr
 
@@ -32,41 +29,9 @@ def get_spark_session():
 
     return builder.getOrCreate()
 
-def register_delta_table_in_trino(schema_name, table_name, table_location, trino_host="trino-coordinator", trino_port=8080):
-    """
-    Registers the Delta Lake table in Trino's minio_delta catalog (backed by Hive Metastore),
-    enabling querying across the lakehouse just like AWS Glue Data Catalog and Athena.
-    """
-    url = f"http://{trino_host}:{trino_port}/v1/statement"
-    query = f"CALL minio_delta.system.register_table(schema_name => '{schema_name}', table_name => '{table_name}', table_location => '{table_location}')"
-    headers = {"X-Trino-User": "spark"}
-
-    try:
-        req = urllib.request.Request(url, data=query.encode("utf-8"), headers=headers)
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-
-        while "nextUri" in data:
-            time.sleep(0.5)
-            next_req = urllib.request.Request(data["nextUri"], headers=headers)
-            with urllib.request.urlopen(next_req, timeout=10) as next_resp:
-                data = json.loads(next_resp.read().decode("utf-8"))
-
-        if "error" in data:
-            err = data["error"].get("message", "")
-            if "already exists" in err.lower():
-                print(f"Table '{schema_name}.{table_name}' is already registered in Trino/Hive Metastore.")
-            else:
-                print(f"Trino registration notice: {err}")
-        else:
-            print(f"Successfully registered table '{schema_name}.{table_name}' in Trino/Hive Metastore.")
-    except Exception as e:
-        print(f"Trino registration notice: {e}")
-
 def upsert_to_delta(micro_batch_df, batch_id):
     """
-    Upserts each streaming micro-batch into the Delta table via path-based MERGE INTO
-    and ensures the table is registered in Hive Metastore/Trino.
+    Upserts each streaming micro-batch into the Delta table via path-based MERGE INTO.
     """
     if micro_batch_df.rdd.isEmpty():
         print(f"[Batch {batch_id}] Micro-batch is empty. Skipping.")
@@ -125,7 +90,6 @@ def upsert_to_delta(micro_batch_df, batch_id):
             .mode("overwrite")
             .save(delta_target_path))
         print(f"[Batch {batch_id}] Successfully initialized Delta table at {delta_target_path}.")
-        register_delta_table_in_trino(db_name, table_name, delta_target_path)
 
 def main():
     print("=" * 60)
@@ -142,9 +106,6 @@ def main():
     if not os.path.exists(desc_file_path):
         desc_file_path = "/notebooks/daily_kafka_to_delta_spark_job/transaction.desc"
     checkpoint_path = "s3a://staging/delta/checkpoints/financial_transactions"
-    db_name = "lakehouse"
-    table_name = "financial_transactions"
-    delta_target_path = f"s3a://staging/databases/{db_name}.db/{table_name}"
 
     print(f"Subscribing to Kafka Topic: {topic_name} at {kafka_bootstrap_servers}")
     kafka_stream = (spark.readStream
@@ -193,11 +154,8 @@ def main():
     print("Waiting for micro-batch stream execution to complete...")
     query.awaitTermination()
 
-    # Ensure table registration in Trino/Hive Metastore post-job
-    register_delta_table_in_trino(db_name, table_name, delta_target_path)
-
     print("=" * 60)
-    print("Spark Streaming Job Finished Successfully! Table available in Hive Metastore and Trino.")
+    print("Spark Streaming Job Finished Successfully! Delta table written to Lakehouse.")
     print("=" * 60)
 
 if __name__ == "__main__":
