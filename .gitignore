@@ -38,3 +38,4 @@ Thumbs.db
 docker-compose.override.yaml
 *_pb2.py
 /airflow/logs/*
+/content
