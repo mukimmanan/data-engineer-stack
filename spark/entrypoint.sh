@@ -28,6 +28,19 @@ if [ "$ROLE" = "zeppelin" ]; then
     export ZEPPELIN_HOME=/opt/zeppelin
     export SPARK_HOME=/opt/spark
     
+    # Seed interpreter.json from mounted seed file if provided
+    if [ -f /opt/zeppelin/conf_seed/interpreter.json ]; then
+        cp -f /opt/zeppelin/conf_seed/interpreter.json /opt/zeppelin/conf/interpreter.json 2>/dev/null || true
+        chmod 666 /opt/zeppelin/conf/interpreter.json 2>/dev/null || true
+    fi
+
+    # Ensure Trino JDBC driver is present for %trino interpreter
+    if ! ls /opt/zeppelin/interpreter/jdbc/trino-jdbc-*.jar 1>/dev/null 2>&1; then
+        echo "Downloading Trino JDBC driver for Zeppelin..."
+        curl -f -L --retry 3 -o /opt/zeppelin/interpreter/jdbc/trino-jdbc-438.jar \
+            https://repo1.maven.org/maven2/io/trino/trino-jdbc/438/trino-jdbc-438.jar 2>/dev/null || true
+    fi
+
     # CRITICAL: Shift the arguments to remove 'zeppelin' and execute the rest.
     # The remaining arguments are: "zeppelin-daemon.sh", "start"
     shift
