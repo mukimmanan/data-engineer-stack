@@ -62,6 +62,34 @@ def register_table_in_hive_metastore(spark, db_name, table_name, location):
             LOCATION '{location}'
         """)
         print(f"Successfully registered '{db_name}.{table_name}' in Hive Metastore.")
+
+        # Update Hive Metastore TABLE_PARAMS to mark provider as 'delta' for Trino
+        try:
+            pg_host = os.getenv("POSTGRES_HOST", "postgres")
+            pg_port = os.getenv("POSTGRES_PORT", "5432")
+            pg_db = os.getenv("POSTGRES_HIVE_DB", "hive")
+            pg_user = os.getenv("POSTGRES_USER", "primary_user")
+            pg_password = os.getenv("POSTGRES_PASSWORD", "primary_password")
+
+            jdbc_url = f"jdbc:postgresql://{pg_host}:{pg_port}/{pg_db}"
+            conn = spark._jvm.java.sql.DriverManager.getConnection(jdbc_url, pg_user, pg_password)
+            stmt = conn.createStatement()
+            stmt.executeUpdate(f"""
+                UPDATE "TABLE_PARAMS"
+                SET "PARAM_VALUE" = 'delta'
+                WHERE "PARAM_KEY" = 'spark.sql.sources.provider'
+                  AND "TBL_ID" = (SELECT "TBL_ID" FROM "TBLS" WHERE "TBL_NAME" = '{table_name}')
+            """)
+            stmt.executeUpdate(f"""
+                INSERT INTO "TABLE_PARAMS" ("TBL_ID", "PARAM_KEY", "PARAM_VALUE")
+                SELECT "TBL_ID", 'table_type', 'DELTA'
+                FROM "TBLS" WHERE "TBL_NAME" = '{table_name}'
+                ON CONFLICT ("TBL_ID", "PARAM_KEY") DO UPDATE SET "PARAM_VALUE" = 'DELTA'
+            """)
+            conn.close()
+            print(f"Successfully updated Hive Metastore provider to 'delta' for Trino compatibility.")
+        except Exception as meta_err:
+            print(f"Note: Metastore delta property update skipped/warning: {meta_err}")
     except Exception as e:
         print(f"Warning: Hive Metastore registration error: {e}")
 

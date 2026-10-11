@@ -54,7 +54,6 @@ services:
       - ./conf/coordinator/config.properties:/etc/trino/config.properties:ro
       - ./conf/coordinator/node.properties:/etc/trino/node.properties:ro
       - ./conf/coordinator/catalog/:/etc/trino/catalog/
-      - ./conf/coordinator/data/:/var/lib/trino/data/
     ports:
       - "8093:8080" # Exposed port for clients and Web UI
     networks:
@@ -84,7 +83,6 @@ services:
     volumes:
       - ./conf/worker/config.properties:/etc/trino/config.properties:ro
       - ./conf/worker/node.properties:/etc/trino/node.properties:ro
-      - ./conf/worker/data/:/var/lib/trino/data/
       - ./conf/coordinator/catalog/:/etc/trino/catalog/
     networks:
       - trino-network
@@ -92,6 +90,11 @@ services:
     depends_on:
       trino-coordinator:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/v1/info || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   trino-query-ui:
     image: dbeaver/cloudbeaver:latest
